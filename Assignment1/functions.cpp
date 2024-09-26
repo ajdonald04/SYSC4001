@@ -1,7 +1,7 @@
 /**
  * Implementation file for methods used
  * 
- * Authors: Aj Donald 101259149, Jayven Larsen 101259149
+ * Authors: Aj Donald 101259149, Jayven Larsen 101260364
  */
 #include <fstream>
 #include "utils.h"
