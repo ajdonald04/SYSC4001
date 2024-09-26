@@ -37,7 +37,7 @@ void logExecution(EventType& event);
 
     else
     {
-        std::cerr << "Error: Unable to open execution.txt file for logging" << std::endl; 
+        std::cerr << "Error: Unable to open execution.txt file for logging" << std::endl;
     }
 
 }
