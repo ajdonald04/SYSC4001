@@ -1,7 +1,7 @@
 /**
  * Implementation file for methods used
  * 
- * Authors: Aj Donald 101259149, Jayven Larsen 101259149
+ * Authors: Aj Donald 101259149, Jayven Larsen 101260364
  */
 #include <fstream>
 #include "functions.h"
@@ -49,5 +49,31 @@ void logExecution(uint32_t duration, std::string &eventname);
     {
         std::cerr << "Error: Unable to open execution.txt file for logging" << std::endl;
     }
+
+void vectorTableHandler(){
+
+    std::string filename = "vector_table.txt";
+    std::string lines;
+
+    vector<VectorTableEntry> vectorTable;
+    
+
+    std::fstream.file(filename);
+
+    if (!file){
+        std::cerr << "Unable to open file" << std::endl;
+        return 0;
+    }
+
+    while(std::getline(filename, line)){
+        //init a new vector table entry structure
+        //split the vector table line into correct segments for the structure
+        //cast the string values to ints
+        //cast the int values to uint16
+        //VectorTableEntry vectorInstruction; 
+        //vectorTable.pushback(vectorInstruction.
+    }
+
+    
 
 }
