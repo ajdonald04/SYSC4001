@@ -12,10 +12,10 @@
 #define UTILS_H
 
 
-struct EventType
+struct TraceEvent
 {
     std::string name; 
-    uint8_t eventID; 
+    uint8_t ID; 
     uint32_t duration; 
 }; 
 

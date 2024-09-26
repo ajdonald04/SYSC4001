@@ -6,6 +6,6 @@
 
 #include "utils.h"
 
-void logExecution(EventType& event);
+void logExecution(uint32_t duration, std::string &eventName);
 
-void eventHandler(EventType event); 
+void eventHandler(TraceEvent& event); 

@@ -5,17 +5,27 @@
  */
 #include <fstream>
 #include "functions.h"
-
+#include <cstdlib> 
+#include <ctime>
 static int sim_time = 0; 
-void eventHandler(EventType event)
+void eventHandler(TraceEvent& event)
 {
-    if(event.eventName == "CPU")
+    if(event.name == "CPU")
     {
-        logExecution(event.duration, "CPU Execution");
+        event.name = "CPU Execution";
+        logExecution(event.duration, event.name);
     }
+    else if(event.name == "SysCall" && event.ID == 1)
+    {
+        // assumption here is we use IDs to help identify the different types of system calls
+        // struct member only needed for that
+        logExecution(1, "Switch to Kernel Mode");
+    }
+    
+
 }
 
-void logExecution(EventType& event);
+void logExecution(uint32_t duration, std::string &eventname);
 {
     // using ofstream as a variable to store the file, it's name is execution.txt and it's in append mode
 
