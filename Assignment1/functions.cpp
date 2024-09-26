@@ -10,12 +10,11 @@
 #include <string>
 #include <iostream> 
 
-static int sim_time = 0; 
-#include <iostream>
+
 #include <sstream>
-#include <string>
 #include <vector>
 
+static int sim_time = 0; 
 // Global variable to track simulation time
 static uint32_t sim_time = 0;
 
@@ -102,7 +101,7 @@ void inputRead()
     }
 
     std::string line;
-
+    std::vector<TraceEvent> events; 
     while(std::getline(inputFile, line))
     {
         std::istringstream iss(line);
@@ -115,17 +114,37 @@ void inputRead()
             iss >> event.name >> comma >> event.duration; 
         }
 
-        else if (line.find("SYSCALL" != std::string::npos)
+        else if (line.find("SYSCALL") != std::string::npos)
         { 
             std::string sysCALL; 
-            iss >> sysCALL >> event.ID
+            iss >> sysCALL >> event.ID;
             char comma;
-            iss >> comma >> 
-            event.name = "SYSCCALL";
-        
-
+            iss >> comma >> event.duration;
+            event.name = "SYSCALL";
+    
         }
-
+        else if (line.find("END_IO") != std::string::npos)
+        {
+            std::string endIO; 
+            iss >> endIO >> event.ID; 
+            char comma; 
+            iss >> comma >> event.duration; 
+            event.name = "END_IO";
+        }
+        // adding events to the vector 
+        events.push_back(event);
     }
-    std::ifstream inputFile("trace1.txt");
+    inputFile.close(); 
+
+    for (const auto& event : events)
+    {
+        if(event.name == "CPU")
+        {
+            std::cout << "Event : " << event.name << ", Duration : " << event.duration << std::endl; 
+        }
+        else
+        {
+            std::cout << "Event : " << event.name << " " << event.ID << ", Duration" << event.duration << std::endl; 
+        }
+    }
 }
