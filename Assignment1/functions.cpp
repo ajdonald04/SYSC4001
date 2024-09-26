@@ -19,9 +19,23 @@ void eventHandler(TraceEvent& event)
     {
         // assumption here is we use IDs to help identify the different types of system calls
         // struct member only needed for that
+        
+        // mode switching = 1ms 
         logExecution(1, "Switch to Kernel Mode");
+        // save context is random between 1 - 3 ms 
+
+        logExecution(rand() % 3 + 1, "Save Context");
+        logExecution(1, "Find vector in memory");
+        logExecution(event.duration, "Execute ISR"); 
+        logExecution(1, "IRET");
+
     }
-    
+    else if(event.name == "SysCall" && event.ID != 1)
+    {
+        // per assignment description 
+        
+    }
+
 
 }
 
