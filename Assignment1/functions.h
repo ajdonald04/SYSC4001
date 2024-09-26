@@ -3,7 +3,9 @@
  * 
  * Authors: Aj Donald 101259149, Jayven Larsen 101260364?? 
  */
-#include utils.h 
 
-void logExecution(struct EventType);
+#include "utils.h"
 
+void logExecution(EventType& event);
+
+void eventHandler(EventType event); 

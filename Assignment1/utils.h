@@ -14,7 +14,7 @@
 
 struct EventType
 {
-    std::string event; 
+    std::string name; 
     uint8_t eventID; 
     uint32_t duration; 
 }; 
