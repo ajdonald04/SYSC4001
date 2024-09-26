@@ -4,17 +4,15 @@
  * Authors: Aj Donald 101259149, Jayven Larsen 101260364
  */
 #include <fstream>
+#include "functions.h"
 #include "utils.h"
 #include <cstdlib>
 #include <ctime>
 #include <string>
 #include <iostream> 
-
-
 #include <sstream>
 #include <vector>
 
-static int sim_time = 0; 
 // Global variable to track simulation time
 static uint32_t sim_time = 0;
 
@@ -42,7 +40,7 @@ void eventHandler(TraceEvent& event)
 }
 
 // Function to log the execution of each event
-void logExecution(uint32_t duration, const std::string &eventName) {
+void logExecution(uint32_t duration, const std::string eventName) {
     // Open the file in append mode
     std::ofstream outputFile("execution.txt", std::ios::app);
 
@@ -59,61 +57,35 @@ void logExecution(uint32_t duration, const std::string &eventName) {
     else {
         std::cerr << "Error: Unable to open execution.txt file for logging" << std::endl;
     }
-
-void vectorTableHandler(){
-
-    // change for test
-    std::string filename = "vector_table.txt";
-    std::string lines;
-
-    vector<VectorTableEntry> vectorTable;
-    
-
-    std::fstream.file(filename);
-
-    if (!file){
-        std::cerr << "Unable to open file" << std::endl;
-        return 0;
-    }
-
-    while(std::getline(filename, line)){
-        //init a new vector table entry structure
-        //split the vector table line into correct segments for the structure
-        //cast the string values to ints
-        //cast the int values to uint16
-        //VectorTableEntry vectorInstruction; 
-        //vectorTable.pushback(vectorInstruction.
-    }
-
-    
-
 }
-void inputRead()
-{
-    // create an input file object
-    std::string fileName; 
+
+void inputRead(){
+    // Set the input file name (this was missing in your code)
+    std::string fileName = "trace1.txt"; 
     
     std::ifstream inputFile(fileName); 
 
-    if(!inputFile)
+    if(!inputFile) 
     {
-        std::cerr << "Error when opening file : " << fileName << std::endl; 
+        std::cerr << "Error when opening file: " << fileName << std::endl; 
+        return;  // Make sure to return if the file can't be opened!
     }
 
     std::string line;
-    std::vector<TraceEvent> events; 
+    std::vector<TraceEvent> events;  // Vector to store parsed events
+    
+    // Read the file line by line
     while(std::getline(inputFile, line))
     {
         std::istringstream iss(line);
         TraceEvent event; 
 
-        if(line.find("CPU") != std::string::npos) // might not need std::string::npos, no need to check 
+        if(line.find("CPU") != std::string::npos)
         {
             event.name = "CPU";
             char comma; 
             iss >> event.name >> comma >> event.duration; 
         }
-
         else if (line.find("SYSCALL") != std::string::npos)
         { 
             std::string sysCALL; 
@@ -121,7 +93,6 @@ void inputRead()
             char comma;
             iss >> comma >> event.duration;
             event.name = "SYSCALL";
-    
         }
         else if (line.find("END_IO") != std::string::npos)
         {
@@ -131,20 +102,22 @@ void inputRead()
             iss >> comma >> event.duration; 
             event.name = "END_IO";
         }
-        // adding events to the vector 
+        // Adding events to the vector 
         events.push_back(event);
     }
+    
     inputFile.close(); 
 
+    // Output the parsed events for verification
     for (const auto& event : events)
     {
         if(event.name == "CPU")
         {
-            std::cout << "Event : " << event.name << ", Duration : " << event.duration << std::endl; 
+            std::cout << "Event: " << event.name << ", Duration: " << event.duration << std::endl; 
         }
         else
         {
-            std::cout << "Event : " << event.name << " " << event.ID << ", Duration" << event.duration << std::endl; 
+            std::cout << "Event: " << event.name << " " << event.ID << ", Duration: " << event.duration << std::endl; 
         }
     }
 }
