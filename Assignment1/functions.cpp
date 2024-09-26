@@ -7,6 +7,9 @@
 #include "functions.h"
 #include <cstdlib> 
 #include <ctime>
+#include <string>
+#include <iostream> 
+
 static int sim_time = 0; 
 void eventHandler(TraceEvent& event)
 {
@@ -52,6 +55,7 @@ void logExecution(uint32_t duration, std::string &eventname);
 
 void vectorTableHandler(){
 
+    // change for test
     std::string filename = "vector_table.txt";
     std::string lines;
 
