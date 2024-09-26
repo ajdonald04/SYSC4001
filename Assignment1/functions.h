@@ -8,4 +8,6 @@
 
 void logExecution(uint32_t duration, std::string &eventName);
 
-void eventHandler(TraceEvent& event); 
+void eventHandler(TraceEvent& event);
+
+void inputRead(); 
