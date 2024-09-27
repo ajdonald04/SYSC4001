@@ -15,5 +15,5 @@ void eventHandler(TraceEvent& event);
 
 void inputRead(std::string fileName); 
 
-//void vectorTableHandler(); 
+void vectorTableHandler(); 
 #endif

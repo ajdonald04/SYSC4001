@@ -15,7 +15,7 @@ typedef struct TraceEvent
 
 // Structure for vector table entry
 struct VectorTableEntry { 
-    uint16_t InitMemAddress; 
+    uint32_t InitMemAdd; 
     uint16_t InterruptNum; 
     uint16_t ISRAddress; 
 };
