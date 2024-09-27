@@ -13,7 +13,7 @@ void logExecution(uint32_t duration, std::string eventName);
 
 void eventHandler(TraceEvent& event);
 
-void inputRead(); 
+void inputRead(std::string fileName); 
 
 //void vectorTableHandler(); 
 #endif

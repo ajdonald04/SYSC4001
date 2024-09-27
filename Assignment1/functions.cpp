@@ -16,7 +16,7 @@
 // Global variable to track simulation time
 static uint32_t sim_time = 0;
 
-void eventHandler(TraceEvent& event)
+void eventHandler(TraceEvent event)
 {
     if (event.name == "CPU") {
         event.name = "CPU Execution";
@@ -59,9 +59,8 @@ void logExecution(uint32_t duration, const std::string eventName) {
     }
 }
 
-void inputRead(){
+void inputRead(std::string fileName){
     // Set the input file name (this was missing in your code)
-    std::string fileName = "trace1.txt"; 
     
     std::ifstream inputFile(fileName); 
 
@@ -111,13 +110,6 @@ void inputRead(){
     // Output the parsed events for verification
     for (const auto& event : events)
     {
-        if(event.name == "CPU")
-        {
-            std::cout << "Event: " << event.name << ", Duration: " << event.duration << std::endl; 
-        }
-        else
-        {
-            std::cout << "Event: " << event.name << " " << event.ID << ", Duration: " << event.duration << std::endl; 
-        }
+        eventHandler(event);
     }
 }
