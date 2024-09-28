@@ -13,13 +13,5 @@ typedef struct TraceEvent
     uint32_t duration; 
 } trace_t;
 
-// Structure for vector table entry
-struct VectorTableEntry { 
-    uint32_t InitMemAdd; 
-    uint16_t InterruptNum; 
-    uint16_t ISRAddress; 
-};
-
-
 
 #endif

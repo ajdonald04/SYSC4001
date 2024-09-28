@@ -24,8 +24,7 @@ void eventHandler(TraceEvent event)
         event.name = "CPU Execution";
         logExecution(event.duration, event.name);
     }
-    if(event.ID < isrAddresses.size())
-    {
+   
         uint16_t ISRAddress = isrAddresses[event.ID];
         uint16_t memoryPosition = event.ID * 2; 
         
@@ -36,7 +35,7 @@ void eventHandler(TraceEvent event)
             // Save context is random between 1 - 3 ms
             logExecution(rand() % 3 + 1, "Save Context");
             logExecution(1, "Find vector #"+std::to_string(event.ID) + " in memory position 0x"+std::to_string(memoryPosition));
-            logExecution(1, "Load address 0x"+std::to_string(ISRAddress)+ " into PC")
+            logExecution(1, "Load address 0x"+std::to_string(ISRAddress)+ " into PC");
 
             // Execute ISR and IRET
             logExecution(event.duration, "SYSCALL: run the ISR");
@@ -47,18 +46,17 @@ void eventHandler(TraceEvent event)
             logExecution(1, "Check if the interrupt is masked"); 
             logExecution(1, "Switch to Kernel Mode"); 
             logExecution(rand() % 3 + 1, "Save Context"); 
-            logExecution(1, "Find vector #"+std::to_string(event.ID)+ " in memory position 0x"+std::to_string(memoryPosition))
-                logExecution(1, "Load address 0x" + std::to_string(ISRAddress));
+            logExecution(1, "Find vector #"+std::to_string(event.ID)+ " in memory position 0x"+std::to_string(memoryPosition));
+            logExecution(1, "Load address 0x" + std::to_string(ISRAddress));
             logExecution(event.duration, "I/O Completed");
             logExecution(1, "IRET");
         }
-    }
+    
 }
 
-
-// Function to log the execution of each event
 void logExecution(uint32_t duration, const std::string eventName) {
-    
+    //std::cout << "Logging event: " << eventName << " with duration: " << duration << std::endl;
+
     // Open the file in append mode
     std::ofstream outputFile("execution.txt", std::ios::app);
 
@@ -78,14 +76,12 @@ void logExecution(uint32_t duration, const std::string eventName) {
 }
 
 void inputRead(std::string fileName){
-    // Set the input file name (this was missing in your code)
     
     std::ifstream inputFile(fileName); 
 
     if(!inputFile) 
     {
         std::cerr << "Error when opening file: " << fileName << std::endl; 
-        return;  // Make sure to return if the file can't be opened!
     }
 
     std::string line;
@@ -140,7 +136,7 @@ std::vector<uint16_t> vectorTableHandler(std::string fileName)
 
     std::string line; 
 
-    while(getfile(inputFile, line))
+    while(std::getline(inputFile, line))
     {
         std::istringstream iss(line); 
 
@@ -149,9 +145,11 @@ std::vector<uint16_t> vectorTableHandler(std::string fileName)
         iss >> std::hex >> ISRAddress; 
 
         isrAddresses.push_back(ISRAddress);
+
+        std::cout << "Loaded ISR address: 0x" << std::hex << ISRAddress << std::endl;
+
     }
     inputFile.close();
 
     return isrAddresses;
-    
 }
