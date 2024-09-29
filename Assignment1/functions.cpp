@@ -36,7 +36,7 @@ void eventHandler(TraceEvent event)
 
     // Ensure that the event ID is within bounds of the vector table
     if (event.ID >= 0 && event.ID < vectorTableSize) {
-        uint16_t ISRAddress = isrAddresses[event.ID];
+        uint16_t ISRAddress = isrAddresses[event.ID-1];
         uint16_t memoryPosition = event.ID * 2;  // Memory position formula
 
         if (event.name == "SYSCALL") {

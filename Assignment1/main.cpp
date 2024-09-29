@@ -5,7 +5,7 @@ int main()
 {
     srand(time(0));
 
-    inputRead("trace1.txt");
+    inputRead("test_trace.txt");
     
     return 0;
 }
