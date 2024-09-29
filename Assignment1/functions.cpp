@@ -19,9 +19,8 @@ std::string toHex(uint16_t value, int width) {
     return ss.str();
 }
 
-void eventHandler(TraceEvent event)
+void eventHandler(TraceEvent event, const std::vector<uint16_t>& isrAddresses)
 {
-    std::vector<uint16_t> isrAddresses = vectorTableHandler("vector_table.txt");
     int vectorTableSize = isrAddresses.size();
 
     if (vectorTableSize == 0) {
@@ -34,13 +33,13 @@ void eventHandler(TraceEvent event)
         logExecution(event.duration, "CPU Execution");
     }
 
-    // check that event ID is within bounds of the vector table
-    if (event.ID >= 0 && event.ID < vectorTableSize) {
-        uint16_t ISRAddress = isrAddresses[event.ID-1];
+    // Check that event ID is within bounds of the vector table
+    if (event.ID > 0 && event.ID <= vectorTableSize) {
+        uint16_t ISRAddress = isrAddresses[event.ID - 1];
         uint16_t memoryPosition = event.ID * 2;  // Memory position formula
 
         if (event.name == "SYSCALL") {
-            logExecution(event.duration, "Switch to Kernel Mode");
+            logExecution(1, "Switch to Kernel Mode");
             logExecution(rand() % 3 + 1, "Save Context");
             logExecution(1, "Find vector #" + std::to_string(event.ID) + " in memory position 0x" + toHex(memoryPosition, 4));
             logExecution(1, "Load address 0x" + toHex(ISRAddress, 4) + " into PC");
@@ -64,6 +63,7 @@ void eventHandler(TraceEvent event)
     }
 }
 
+
 void logExecution(uint32_t duration, const std::string eventName) {
     std::ofstream outputFile("execution.txt", std::ios::app);
 
@@ -81,7 +81,7 @@ void logExecution(uint32_t duration, const std::string eventName) {
     }
 }
 
-void inputRead(std::string fileName) {
+void inputRead(std::string fileName, const std::vector<uint16_t>& isrAddresses) {
     std::ifstream inputFile(fileName);
 
     if (!inputFile) {
@@ -126,9 +126,10 @@ void inputRead(std::string fileName) {
 
     // Process the events
     for (const auto& event : events) {
-        eventHandler(event);  // Call eventHandler for each event
+        eventHandler(event, isrAddresses);  // Pass isrAddresses to the event handler
     }
 }
+
 
 
 std::vector<uint16_t> vectorTableHandler(std::string fileName) {
@@ -146,3 +147,4 @@ std::vector<uint16_t> vectorTableHandler(std::string fileName) {
 
     return isrAddresses;
 }
+

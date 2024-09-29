@@ -11,9 +11,9 @@
 
 void logExecution(uint32_t duration, std::string eventName);
 
-void eventHandler(TraceEvent& event);
+void eventHandler(TraceEvent& event, std::vector<uint16_t> isrAddresses);
 
-void inputRead(std::string fileName); 
+void inputRead(std::string fileName, std::vector<uint16_t> isrAddresses); 
 
 std::vector<uint16_t> vectorTableHandler(std::string fileName); 
 #endif

@@ -15,7 +15,7 @@ int main()
     std::cin >> TraceFile; 
 
     std::vector<uint16_t> isrAddresses = vectorTableHandler(VectorTableFile);
-    inputRead(TraceFile);
+    inputRead(TraceFile, isrAddresses);
     
     return 0;
 }
