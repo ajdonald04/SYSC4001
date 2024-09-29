@@ -5,7 +5,17 @@ int main()
 {
     srand(time(0));
 
-    inputRead("test_trace.txt");
+    std::string VectorTableFile, TraceFile; 
+
+    std::cout << "Enter the vector table file name: "; 
+    std::cin >> VectorTableFile; 
+    
+
+    std::cout << "Enter the trace file name: ";
+    std::cin >> TraceFile; 
+
+    std::vector<uint16_t> isrAddresses = vectorTableHandler(VectorTableFile);
+    inputRead(TraceFile);
     
     return 0;
 }

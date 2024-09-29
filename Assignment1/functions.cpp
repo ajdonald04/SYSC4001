@@ -107,14 +107,12 @@ void inputRead(std::string fileName) {
             if (activity.find("CPU") != std::string::npos) {
                 event.name = "CPU";
                 durationStream >> event.duration;
-                std::cout << "Parsed CPU event: duration = " << event.duration << std::endl;
             } 
             // Handle SYSCALL and END_IO events with multi-digit IDs
             else if (activity.find("SYSCALL") != std::string::npos || activity.find("END_IO") != std::string::npos) {
                 event.name = activity.substr(0, activity.find_first_of(' '));  // Extract the name (SYSCALL/END_IO)
                 event.ID = std::stoi(activity.substr(activity.find_last_of(' ') + 1));  // Extract multi-digit ID
                 durationStream >> event.duration;
-                std::cout << "Parsed " << event.name << " event: ID = " << event.ID << ", duration = " << event.duration << std::endl;
             }
 
             // Add the event to the vector
