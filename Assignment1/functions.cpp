@@ -12,7 +12,7 @@
 // Global variable to track simulation time
 static uint32_t sim_time = 0;
 
-// Utility function to convert decimal to hex with a fixed width
+// helper function to convert decimal to hex with a fixed width
 std::string toHex(uint16_t value, int width) {
     std::stringstream ss;
     ss << std::hex << std::uppercase << std::setw(width) << std::setfill('0') << value;
@@ -34,13 +34,12 @@ void eventHandler(TraceEvent event)
         logExecution(event.duration, "CPU Execution");
     }
 
-    // Ensure that the event ID is within bounds of the vector table
+    // check that event ID is within bounds of the vector table
     if (event.ID >= 0 && event.ID < vectorTableSize) {
         uint16_t ISRAddress = isrAddresses[event.ID-1];
         uint16_t memoryPosition = event.ID * 2;  // Memory position formula
 
         if (event.name == "SYSCALL") {
-            // SYSCALL handling
             logExecution(event.duration, "Switch to Kernel Mode");
             logExecution(rand() % 3 + 1, "Save Context");
             logExecution(1, "Find vector #" + std::to_string(event.ID) + " in memory position 0x" + toHex(memoryPosition, 4));
