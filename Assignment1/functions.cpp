@@ -29,6 +29,11 @@ void eventHandler(TraceEvent event)
         return;
     }
 
+    if(event.name == "CPU")
+    {
+        logExecution(event.duration, "CPU Execution");
+    }
+
     // Ensure that the event ID is within bounds of the vector table
     if (event.ID >= 0 && event.ID < vectorTableSize) {
         uint16_t ISRAddress = isrAddresses[event.ID];
