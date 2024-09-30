@@ -1,5 +1,5 @@
 
-#include "functions.h"
+#include "interrupts.h"
 // For hex formatting
 
 // Global variable to track simulation time
