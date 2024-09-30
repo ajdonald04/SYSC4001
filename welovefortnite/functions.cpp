@@ -51,10 +51,7 @@ void eventHandler(TraceEvent event, std::string fileName)
             logExecution(event.duration, "I/O Completed");
             logExecution(1, "IRET");
         }
-    } else {
-        std::cerr << "Error: Invalid event ID for vector table lookup: " << event.ID 
-                  << ". The vector table size is " << vectorTableSize << std::endl;
-    }
+    } 
 }
 
 void logExecution(uint32_t duration, const std::string eventName) {
