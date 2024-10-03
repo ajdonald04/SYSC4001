@@ -1,5 +1,3 @@
-9
-
 CPU, 66
 SYSCALL 8, 172
 CPU, 94
