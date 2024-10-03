@@ -32,6 +32,7 @@ void inputRead(std::string fileName, std::string vectorFileName);
 
 std::vector<uint16_t> vectorTableHandler(std::string fileName); 
 
+std::string toHex(uint16_t value, int width);
 
 
 #endif
