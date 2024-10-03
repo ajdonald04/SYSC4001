@@ -17,7 +17,7 @@
 #include <fstream>
 #include <stdint.h>
 // Structure to define an event
- struct TraceEvent
+struct TraceEvent
 {
     std::string name; 
     uint8_t ID; 
