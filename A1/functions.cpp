@@ -3,12 +3,10 @@
  * 
  * Authors: Aj Donald 101259149, Jayven Larsen 101260364
  */
-
 #include "interrupts.hpp"
 
 // Global variable to track simulation time
 static uint32_t sim_time = 0;
-
 
 std::string toHex(uint16_t value, int width) {
     std::stringstream ss;
@@ -45,7 +43,6 @@ void eventHandler(TraceEvent event, std::string fileName)
             logExecution(1, "IRET");
         } 
         else if (event.name == "END_IO") {
-            // END_IO handling
             logExecution(1, "Check the priority of the Interrupt");
             logExecution(1, "Check if the interrupt is masked");
             logExecution(1, "Switch to Kernel Mode");
@@ -93,11 +90,9 @@ void inputRead(std::string traceFileName, std::string vectorFileName) {
         std::string activity;
         std::string durationOrID;
 
-        // Split the line by comma
         if (std::getline(ss, activity, ',') && std::getline(ss, durationOrID, ',')) {
             std::stringstream durationStream(durationOrID);  // For parsing duration after the comma
 
-            // Handle CPU events
             if (activity.find("CPU") != std::string::npos) {
                 event.name = "CPU";
                 durationStream >> event.duration;
@@ -109,7 +104,7 @@ void inputRead(std::string traceFileName, std::string vectorFileName) {
                 durationStream >> event.duration;
             }
 
-            // Add the event to the vector
+            // add events to vector
             events.push_back(event);
         } else {
             std::cerr << "Error parsing line: " << line << std::endl;
@@ -118,9 +113,9 @@ void inputRead(std::string traceFileName, std::string vectorFileName) {
 
     inputFile.close();
 
-    // Process the events
+    // process events
     for (const auto& event : events) {
-        eventHandler(event, vectorFileName);  // Call eventHandler for each event
+        eventHandler(event, vectorFileName);  
     }
 }
 
