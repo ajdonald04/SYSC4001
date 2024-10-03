@@ -1,3 +1,13 @@
+"""
+SYSC4001 Assignment 1 
+
+Python Overhead calculator and helper function 
+
+Authors: Aj Donald 101259149, Jayven Larsen 101260364
+
+"""
+
+
 # events that count as overhead
 overhead_events = [
     "Switch to Kernel Mode",
