@@ -4,10 +4,11 @@
  * Authors: Aj Donald 101259149, Jayven Larsen 101260364
  */
 
-#ifndef INTERRUPTS_H
-#define INTERRUPTS_H
+#ifndef FUNCTIONS_HPP
+#define FUNCTIONS_HPP
 
 #include <iostream>
+#include "utils.hpp"
 #include <vector>
 #include <cstdlib>
 #include <ctime>
@@ -15,14 +16,6 @@
 #include <sstream>
 #include <iomanip>  
 #include <fstream>
-#include <stdint.h>
-// Structure to define an event
- struct TraceEvent
-{
-    std::string name; 
-    uint8_t ID; 
-    uint32_t duration; 
-} ;
 
 void logExecution(uint32_t duration, std::string eventName);
 
@@ -31,7 +24,5 @@ void eventHandler(TraceEvent event, std::string fileName);
 void inputRead(std::string fileName, std::string vectorFileName); 
 
 std::vector<uint16_t> vectorTableHandler(std::string fileName); 
-
-
 
 #endif

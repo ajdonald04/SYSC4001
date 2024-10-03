@@ -1,5 +1,5 @@
 
-#include "interrupts.h"
+#include "interrupts.hpp"
 // For hex formatting
 
 // Global variable to track simulation time

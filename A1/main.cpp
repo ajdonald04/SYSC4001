@@ -1,5 +1,5 @@
 
-#include "functions.h"
+#include "functions.hpp"
 int main()
 {
     srand(time(0));
