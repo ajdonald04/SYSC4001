@@ -25,9 +25,9 @@ with open('execution.txt', 'r') as file:
             elif "I/O Completed" in event:
                 io_time += duration
             elif "SYSCALL" in event:
-                syscall_time += duration  # Track SYSCALL as overhead for system operations
+                syscall_time += duration 
             elif any(overhead_event in event for overhead_event in overhead_events):
-                overhead_time += duration  # Track additional overhead events
+                overhead_time += duration  
 
 # Calculate ratios
 overhead_time += syscall_time  # Include SYSCALL time in overhead calculation
@@ -43,4 +43,3 @@ print(f"Total Simulation Time: {total_time} ms")
 print(f"Overhead Ratio: {overhead_ratio:.2f}%")
 print(f"CPU Ratio: {cpu_ratio:.2f}%")
 print(f"I/O Ratio: {io_ratio:.2f}%")
-#print(f"SYSCALL Ratio: {syscall_ratio}")

@@ -1,10 +1,15 @@
+/**
+ * Definition of functions for SYSC4001 A1
+ * 
+ * Authors: Aj Donald 101259149, Jayven Larsen 101260364
+ */
 
 #include "interrupts.hpp"
 
 // Global variable to track simulation time
 static uint32_t sim_time = 0;
 
-// helper function to co
+
 std::string toHex(uint16_t value, int width) {
     std::stringstream ss;
     ss << std::hex << std::uppercase << std::setw(width) << std::setfill('0') << value;

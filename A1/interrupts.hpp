@@ -16,7 +16,8 @@
 #include <iomanip>  
 #include <fstream>
 #include <stdint.h>
-// Structure to define an event
+
+
 struct TraceEvent
 {
     std::string name; 
