@@ -1,11 +1,10 @@
 
 #include "interrupts.hpp"
-// For hex formatting
 
 // Global variable to track simulation time
 static uint32_t sim_time = 0;
 
-// helper function to convert decimal to hex with a fixed width
+// helper function to co
 std::string toHex(uint16_t value, int width) {
     std::stringstream ss;
     ss << std::hex << std::uppercase << std::setw(width) << std::setfill('0') << value;
@@ -33,7 +32,7 @@ void eventHandler(TraceEvent event, std::string fileName)
         uint16_t memoryPosition = event.ID * 2;  // Memory position formula
 
         if (event.name == "SYSCALL") {
-            logExecution(event.duration, "Switch to Kernel Mode");
+            logExecution(1, "Switch to Kernel Mode");
             logExecution(rand() % 3 + 1, "Save Context");
             logExecution(1, "Find vector #" + std::to_string(event.ID) + " in memory position 0x" + toHex(memoryPosition, 4));
             logExecution(1, "Load address 0x" + toHex(ISRAddress, 4) + " into PC");

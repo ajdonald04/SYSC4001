@@ -8,7 +8,6 @@
 #define FUNCTIONS_HPP
 
 #include <iostream>
-#include "utils.hpp"
 #include <vector>
 #include <cstdlib>
 #include <ctime>

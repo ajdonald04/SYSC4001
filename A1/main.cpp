@@ -1,5 +1,5 @@
 
-#include "functions.hpp"
+#include "interrupts.hpp"
 int main()
 {
     srand(time(0));
