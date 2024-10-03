@@ -1,4 +1,4 @@
-# Define events that contribute to overhead
+# events that count as overhead
 overhead_events = [
     "Switch to Kernel Mode",
     "Save Context",
@@ -29,13 +29,15 @@ with open('execution.txt', 'r') as file:
             elif any(overhead_event in event for overhead_event in overhead_events):
                 overhead_time += duration  
 
-# Calculate ratios
-overhead_time += syscall_time  # Include SYSCALL time in overhead calculation
+# ratios 
+overhead_time += syscall_time  
 overhead_ratio = (overhead_time / total_time) * 100 if total_time else 0
 cpu_ratio = (cpu_time / total_time) * 100 if total_time else 0
 io_ratio = (io_time / total_time) * 100 if total_time else 0
 syscall_ratio = (syscall_time / total_time) * 100 if total_time else 0 
-# Print results
+
+
+# results
 print(f"Total Overhead Time: {overhead_time} ms")
 print(f"Total CPU Time: {cpu_time} ms")
 print(f"Total I/O Time: {io_time} ms")
