@@ -35,5 +35,6 @@ std::vector<uint16_t> vectorTableHandler(std::string fileName);
 
 std::string toHex(uint16_t value, int width);
 
+std::string executionFile(std::string fileName); 
 
 #endif

@@ -8,6 +8,8 @@
 // Global variable to track simulation time
 static uint32_t sim_time = 0;
 
+
+
 std::string toHex(uint16_t value, int width) {
     std::stringstream ss;
     ss << std::hex << std::uppercase << std::setw(width) << std::setfill('0') << value;
