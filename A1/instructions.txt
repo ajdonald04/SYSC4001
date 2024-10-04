@@ -1,0 +1,31 @@
+FOLLOW THESE INSTRUCTIONS TO RUN CODE
+
+RUNNING INTERRUPTS.CPP
+
+1) Unzip and extract extrafiles folder 
+2) bring the "functions.cpp" file into the same folder in which the interrupts.cpp and interrupts.hpp are located
+3) open a termial 
+4) cd into the folder where the functions.cpp, interrupts.cpp & interrupts.hpp files are.
+5) run the following command: 
+    g++ interrupts.cpp functions.cpp -o execution.o
+6) After compiling, run the following command:
+    ./execution.o
+7) Input the Vector Table name
+8) Input the Trace file name
+9) Input the name of output file which will hold the simulation reports
+10) The output of the simluation will be in the "inputed_file_name".txt
+
+
+RUNNING TEST SCRIPT 1
+1) Open terminal 
+2) cd into the folder where the test1.cpp file is located *MAKE SURE FUNCTIONS.CPP IS IN THE SAME FOLDER
+3) run the following command: 
+    ./test1.sh
+4) The output of the simulation will be in execution1.txt
+
+RUNNING TEST SCRIPT 2
+1) Open terminal 
+2) cd into the folder where the test2.cpp file is located *MAKE SURE FUNCTIONS.CPP IS IN THE SAME FOLDER
+3) run the following command: 
+    ./test2.sh
+4) The output of the simulation will be in execution2.txt
