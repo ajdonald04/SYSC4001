@@ -4,5 +4,3 @@ vector_table.txt
 trace1.txt
 execution1
 EOF 
-
-    
