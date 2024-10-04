@@ -17,7 +17,7 @@ int main()
     std::cout << "Enter the trace file name: ";
     std::cin >> TraceFile; 
 
-    std::cout << "Enter the file name: (without extension)";
+    std::cout << "Enter the file name: (without extension): ";
     std::cin >> outputFileName; 
 
     inputRead(TraceFile, vectorFileName,outputFileName);

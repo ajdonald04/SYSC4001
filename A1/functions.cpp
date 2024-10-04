@@ -63,13 +63,11 @@ void logExecution(uint32_t duration, const std::string eventName) {
 
 
     if (outputFile.is_open()) {
-        // Log the event (simulation time, duration, and event name)
+        // log an event (sim time, duration, and event name)
         outputFile << sim_time << ", " << duration << ", " << eventName << std::endl;
 
-        // Add event duration to total simulation time
         sim_time += duration;
 
-        // Close the file after writing
         outputFile.close();
     } else {
         std::cerr << "Error: Unable to open execution.txt file for logging" << std::endl;
@@ -89,7 +87,7 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
     std::string line;
     std::vector<TraceEvent> events;
 
-    // Read the file line by line
+    
     while (std::getline(inputFile, line)) {
         TraceEvent event;
         std::stringstream ss(line);
@@ -97,7 +95,7 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
         std::string durationOrID;
 
         if (std::getline(ss, activity, ',') && std::getline(ss, durationOrID, ',')) {
-            std::stringstream durationStream(durationOrID);  // For parsing duration after the comma
+            std::stringstream durationStream(durationOrID);  
 
             if (activity.find("CPU") != std::string::npos) {
                 event.name = "CPU";
@@ -105,8 +103,8 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
             } 
             // Handle SYSCALL and END_IO events with multi-digit IDs
             else if (activity.find("SYSCALL") != std::string::npos || activity.find("END_IO") != std::string::npos) {
-                event.name = activity.substr(0, activity.find_first_of(' '));  // Extract the name (SYSCALL/END_IO)
-                event.ID = std::stoi(activity.substr(activity.find_last_of(' ') + 1));  // Extract multi-digit ID
+                event.name = activity.substr(0, activity.find_first_of(' '));  
+                event.ID = std::stoi(activity.substr(activity.find_last_of(' ') + 1));  
                 durationStream >> event.duration;
             }
 
