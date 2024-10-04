@@ -23,7 +23,8 @@ overhead_time = 0
 syscall_time = 0
 total_time = 0
 
-with open('execution.txt', 'r') as file:
+exeFile = str(input("What is that name of output file (without extension): "))
+with open(exeFile+".txt", 'r') as file:
     for line in file:
         parts = line.strip().split(', ')
         if len(parts) == 3:
