@@ -7,7 +7,7 @@
 #include "interrupts.hpp"
 int main()
 {
-    inputRead("trace2.txt", "vector_table.txt");
+    inputRead("trace2.txt", "vector_table.txt", "execution2");
 
     return 0;
 }

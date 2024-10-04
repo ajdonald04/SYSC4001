@@ -8,7 +8,7 @@
 int main()
 {
 
-    std::string vectorFileName, TraceFile; 
+    std::string vectorFileName, TraceFile, outputFileName; 
 
     std::cout << "Enter the vector table file name: "; 
     std::cin >> vectorFileName; 
@@ -17,7 +17,10 @@ int main()
     std::cout << "Enter the trace file name: ";
     std::cin >> TraceFile; 
 
-    inputRead(TraceFile, vectorFileName);
+    std::cout << "Enter the file name: (without extension)";
+    std::cin >> outputFileName; 
+
+    inputRead(TraceFile, vectorFileName,outputFileName);
     
     return 0;
 }

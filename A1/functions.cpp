@@ -7,6 +7,7 @@
 
 // Global variable to track simulation time
 static uint32_t sim_time = 0;
+std::string filename;
 
 std::string toHex(uint16_t value, int width) {
     std::stringstream ss;
@@ -56,7 +57,10 @@ void eventHandler(TraceEvent event, std::string fileName)
 }
 
 void logExecution(uint32_t duration, const std::string eventName) {
-    std::ofstream outputFile("execution.txt", std::ios::app);
+    
+
+    std::ofstream outputFile(filename, std::ios::app);
+
 
     if (outputFile.is_open()) {
         // Log the event (simulation time, duration, and event name)
@@ -72,8 +76,10 @@ void logExecution(uint32_t duration, const std::string eventName) {
     }
 }
 
-void inputRead(std::string traceFileName, std::string vectorFileName) {
+void inputRead(std::string traceFileName, std::string vectorFileName, std::string outputFileName) {
     std::ifstream inputFile(traceFileName);
+
+    filename = outputFileName+".txt";
 
     if (!inputFile) {
         std::cerr << "Error when opening file: " << traceFileName << std::endl;

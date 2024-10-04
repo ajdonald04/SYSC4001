@@ -8,7 +8,7 @@
 int main()
 {
 
-    inputRead("trace1.txt", "vector_table.txt");
+    inputRead("trace1.txt", "vector_table.txt", "execution1");
     
     return 0;
 }
