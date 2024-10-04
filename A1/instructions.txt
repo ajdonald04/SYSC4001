@@ -1,0 +1,12 @@
+Basic Instructions for compile / executing the project 
+
+1. Unzip folders additionalFiles.zip and otherTests.zip 
+2. Copy files from both folders (additionalFiles and otherTests) into same directory as interrupts.cpp/hpp, these should include vector_table.txt and any test.sh files for the additional tests created.
+3. To compile the program, in terminal enter the following command: 
+g++ interrupts.cpp -I interrupts.hpp -o output.o 
+./output.o 
+Then follow the prompts to input your own .txt files such as new trace or vector table files (be sure these files are the in correct (same) directory)
+4. To use the python script (calculate_overhead.py), copy it into the same directory as interrupts.cpp/hpp
+5. To run testX.sh scripts, be sure to run them as executables. 
+
+
