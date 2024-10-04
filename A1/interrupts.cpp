@@ -5,7 +5,7 @@
  */
 #include "interrupts.hpp"
 
-// Global variable to track simulation time
+// variable to track simulation time
 static uint32_t sim_time = 0;
 std::string filename;
 
