@@ -10,6 +10,62 @@
 static uint32_t sim_time = 0;
 std::string filename;
 
+// declaring vectors for structures (partitions, pcb and external files)
+std::vector<memoryPartition> memoryPartitions;
+std::vector<PCB> pcbTable; 
+std::vector<ExternalFile> externalFiles; 
+
+
+void initMemory()
+{ 
+    memoryPartitions = 
+    { 
+        // from the instructions
+        {1,40, "free"},
+        {2, 25, "free"},
+        {3, 15, "free"}, 
+        {4, 10, "free"}, 
+        {5, 8, "free"}, 
+        {6, 2, "init"} 
+    }; 
+    // initialize the process in the 6th partition. 
+    pcbTable.push_back({0, 0, 0, 0, 6, "Running"});
+}
+
+void loadExternalFiles(std::string fileName) {
+
+    // similar to A1, reading an input file 
+    std::ifstream inputFile(fileName);
+    std::string line;
+
+    // loop over the file, line by line
+    while (std::getline(inputFile, line)) {
+        std::istringstream iss(line);
+        // declaring the file as a two component structure
+        ExternalFile file;
+
+        iss >> file.program_name >> file.size;
+
+        // add the files structs into the vector
+        externalFiles.push_back(file);
+    }
+    inputFile.close();
+}
+
+void forkProcess(uint8_t parentPid) {
+    // Find the parent's associated PCB to get its details
+    auto parentIt = std::find_if(pcbTable.begin(), pcbTable.end(),
+                                 [parentPid](const PCB& pcb){ return pcb.pid == parentPid; 
+    });
+    if (parentIt != pcbTable.end()) {
+        PCB child = *parentIt;
+        child.pid = pcbTable.size(); // Assign a new PID
+        child.state = "Ready";
+        pcbTable.push_back(child);
+
+        logExecution(2, "Forked process PID " + std::to_string(child.pid));
+    }
+}
 std::string toHex(uint16_t value, int width) {
     std::stringstream ss;
     ss << std::hex << std::uppercase << std::setw(width) << std::setfill('0') << value;
@@ -139,6 +195,11 @@ std::vector<uint16_t> vectorTableHandler(std::string fileName) {
     inputFile.close();
 
     return isrAddresses;
+}
+
+void initMemory() 
+{
+    
 }
 
 int main()
