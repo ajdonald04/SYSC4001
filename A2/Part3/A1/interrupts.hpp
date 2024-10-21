@@ -68,6 +68,9 @@ void loadExternalFiles(std::string fileName);
 
 void forkProcess(uint8_t parentPID);
 
+void execProcess(uint8_t childPid, std::string programName);
+
+void logSystemStatus(); 
 
 
 #endif

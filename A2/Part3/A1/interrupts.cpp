@@ -66,6 +66,44 @@ void forkProcess(uint8_t parentPid) {
         logExecution(2, "Forked process PID " + std::to_string(child.pid));
     }
 }
+
+void logSystemStatus() {
+
+    // similar to the previous writing to an output file
+    std::ofstream outputFile("system_status.txt", std::ios::app);
+
+    // quick check if the file is open 
+    if (outputFile.is_open()) {
+        outputFile << "Current Simulated Time: " << sim_time << " ms\n";
+        outputFile << "PCB Table:\n";
+        outputFile << "PID\tPartition\tState\tRemaining CPU Time\n";
+        for (const auto& pcb : pcbTable) {
+            outputFile << pcb.pid << "\t"
+                       << pcb.partition_num << "\t"
+                       << pcb.state << "\t"
+                       << pcb.rem_cpu << " ms\n";
+        }
+
+        outputFile << "\nMemory Partitions:\n";
+        outputFile << "Partition\tSize\tStatus\n";
+        for (const auto& partition : memoryPartitions) {
+            outputFile << partition.num << "\t\t"
+                       << partition.size << " MB\t"
+                       << partition.code << "\n";
+        }
+        outputFile << "---------------------------------------------\n";
+        outputFile.close();
+    } else { // error reporting if the file cant be opened
+        std::cerr << "Error: Unable to open system_status.txt for logging\n";
+    }
+}
+
+void execProcess(uint8_t childPid, std::string programName)
+{
+
+}
+
+
 std::string toHex(uint16_t value, int width) {
     std::stringstream ss;
     ss << std::hex << std::uppercase << std::setw(width) << std::setfill('0') << value;
