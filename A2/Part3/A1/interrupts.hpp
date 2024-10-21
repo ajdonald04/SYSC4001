@@ -25,6 +25,29 @@ struct TraceEvent
     uint32_t duration; 
 } ;
 
+struct ExternalFile
+{
+    std::string program_name; 
+    uint8_t size; 
+};
+
+struct PCB
+{ 
+    uint8_t pid;
+    uint8_t cpu_time; 
+    uint8_t IO_time; 
+    uint8_t rem_cpu; 
+    uint8_t partition_num; 
+    std::string state; // process state, running, ready or waiting, etc.
+};
+
+struct memoryPartition
+{
+    uint8_t num; 
+    uint8_t size; 
+    std::string code; //    
+};
+
 void logExecution(uint32_t duration, std::string eventName);
 
 void eventHandler(TraceEvent event, std::string fileName);
