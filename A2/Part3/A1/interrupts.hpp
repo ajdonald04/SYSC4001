@@ -30,7 +30,6 @@ struct ExternalFile
     std::string program_name; 
     uint8_t size; 
 };
-
 struct PCB
 { 
     uint8_t pid;
@@ -48,6 +47,8 @@ struct memoryPartition
     std::string code; //    
 };
 
+
+// A1 functions 
 void logExecution(uint32_t duration, std::string eventName);
 
 void eventHandler(TraceEvent event, std::string fileName);
@@ -57,6 +58,16 @@ void inputRead(std::string fileName, std::string vectorFileName, std::string out
 std::vector<uint16_t> vectorTableHandler(std::string fileName); 
 
 std::string toHex(uint16_t value, int width);
+
+
+// new functions 
+
+void initMemory(); 
+
+void loadExternalFiles(std::string fileName);
+
+void forkProcess(uint8_t parentPID);
+
 
 
 #endif
