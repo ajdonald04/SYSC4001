@@ -5,7 +5,12 @@ using namespace std;
 #include <sys/shm.h>
 #include <sys/ipc.h>
 #include <stdlib.h>
+#include <sys/sem.h>
 #include <time.h>
+
+// semaphore structures for operations (P and V)
+struct sembuf sem_lock = {0, -1, 0}; // P: wait/decrement
+struct sembuf sem_unlock = {0, 1, 0}; // V: signal/increment
 
 int main() {
 
@@ -30,6 +35,20 @@ int main() {
     // Initialize the shared variable
     *shared_var = -1;
 
+    // create the semaphore used.
+    int semid = semget(key, 1, 0666 | IPC_CREAT);
+    if (semid < 0) {
+        cerr << "Failed to create semaphore" << endl;
+        exit(1);
+    }
+
+    // initialize the semaphore to unlocked state (1)
+    if (semctl(semid, 0, SETVAL, 1) < 0) {
+        cerr << "Failed to initialize semaphore" << endl;
+        exit(1);
+    }
+
+
     pid_t pid = fork();
 
     if (pid < 0) {
@@ -37,6 +56,10 @@ int main() {
         exit(1);
     } else if (pid == 0) {
         while (*shared_var != 0) {
+
+            // lock the semaphore before using shared memory
+            semop(semid, &sem_lock, 1); 
+
              // generate random number between 0 and 10
             *shared_var = rand() % 11;
             cout << "Process 1: Generated random number: " << *shared_var << endl;
@@ -46,7 +69,10 @@ int main() {
             } else {
                 cout << "Process 1: Low value" << endl;
             }
-
+        
+            // unlock the semaphore after done using accessing memory
+            semop(semid, &sem_unlock, 1);
+            
             // execute process 2 if the number is 9
             if (*shared_var == 9) {
                 execl("/Users/jayven/sysc4001/A2/Part2/process2", "process2", nullptr);
@@ -64,9 +90,12 @@ int main() {
         // Parent waits for child to finish 
         waitpid(pid, nullptr, 0);
 
-        // cleanup shared memory fter processes are finished
+        // cleanup shared memory after processes are finished
         shmctl(shmid, IPC_RMID, nullptr);
         cout << "Parent cleaned up shared memory" << endl;
+
+        // cleanup the semaphore after processes are finished
+        semctl(semid, 0, IPC_RMID);
     }
 
     return 0;
