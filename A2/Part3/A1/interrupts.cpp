@@ -92,6 +92,21 @@ void logSystemStatus() {
 }
 
 
+int BestFitPartition(uint8_t programSize) {
+    int bestIndex = -1;
+    uint8_t smallestSize = UINT32_MAX;
+
+    for (size_t i = 0; i < memoryPartitions.size(); ++i) {
+        if (memoryPartitions[i].code == "free" && memoryPartitions[i].size >= programSize) {
+            if (memoryPartitions[i].size < smallestSize) {
+                smallestSize = memoryPartitions[i].size;
+                bestIndex = i;
+            }
+        }
+    }
+    return bestIndex;
+}
+
 void scheduler() {
     logExecution(1, "Scheduler called");
     std::cout << "Scheduler called" << std::endl;
