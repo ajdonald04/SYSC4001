@@ -68,58 +68,37 @@ void forkProcess(uint8_t parentPid) {
 }
 
 void logSystemStatus() {
-
-    // similar to the previous writing to an output file
     std::ofstream outputFile("system_status.txt", std::ios::app);
 
-    // quick check if the file is open 
     if (outputFile.is_open()) {
-        outputFile << "Current Simulated Time: " << sim_time << " ms\n";
-        outputFile << "PCB Table:\n";
-        outputFile << "PID\tPartition\tState\tRemaining CPU Time\n";
+        outputFile << "!-----------------------------------------------------------!\n";
+        outputFile << "Save Time: " << sim_time << " ms\n";
+        outputFile << "+--------------------------------------------+\n";
+        outputFile << "| PID |Program Name |Partition Number | size |\n";
+        outputFile << "+--------------------------------------------+\n";
         for (const auto& pcb : pcbTable) {
-            outputFile << pcb.pid << "\t"
-                       << pcb.partition_num << "\t"
-                       << pcb.state << "\t"
-                       << pcb.rem_cpu << " ms\n";
+            auto programName = memoryPartitions[pcb.partition_num - 1].code;
+            outputFile << "| " << std::setw(3) << pcb.pid << " | "
+                       << std::setw(12) << programName << " | "
+                       << std::setw(15) << pcb.partition_num << " | "
+                       << std::setw(4) << memoryPartitions[pcb.partition_num - 1].size << " |\n";
         }
-
-        outputFile << "\nMemory Partitions:\n";
-        outputFile << "Partition\tSize\tStatus\n";
-        for (const auto& partition : memoryPartitions) {
-            outputFile << partition.num << "\t\t"
-                       << partition.size << " MB\t"
-                       << partition.code << "\n";
-        }
-        outputFile << "---------------------------------------------\n";
+        outputFile << "+--------------------------------------------+\n";
+        outputFile << "!-----------------------------------------------------------!\n";
         outputFile.close();
-    } else { // error reporting if the file cant be opened
+    } else {
         std::cerr << "Error: Unable to open system_status.txt for logging\n";
     }
 }
 
-int BestFitPartition(uint8_t programSize) {
-    int bestIndex = -1;
-    uint8_t smallestSize = UINT32_MAX;
-
-    for (size_t i = 0; i < memoryPartitions.size(); ++i) {
-        if (memoryPartitions[i].code == "free" && memoryPartitions[i].size >= programSize) {
-            if (memoryPartitions[i].size < smallestSize) {
-                smallestSize = memoryPartitions[i].size;
-                bestIndex = i;
-            }
-        }
-    }
-    return bestIndex;
-}
 
 void scheduler() {
     logExecution(1, "Scheduler called");
     std::cout << "Scheduler called" << std::endl;
 }
 
-void execProcess(uint8_t childPid, const std::string& programName) {
-    // Find the child process PCB
+void execProcess(uint8_t childPid, std::string programName) {
+    // Find the child process PCB.
     auto childIt = std::find_if(pcbTable.begin(), pcbTable.end(),
                                 [childPid](const PCB& pcb) { return pcb.pid == childPid; });
     if (childIt == pcbTable.end()) {
@@ -127,7 +106,7 @@ void execProcess(uint8_t childPid, const std::string& programName) {
         return;
     }
 
-    // Find the program size from the external files list
+    // Find the program size from the external files list.
     auto programIt = std::find_if(externalFiles.begin(), externalFiles.end(),
                                   [&programName](const ExternalFile& file) { return file.program_name == programName; });
     if (programIt == externalFiles.end()) {
@@ -136,27 +115,38 @@ void execProcess(uint8_t childPid, const std::string& programName) {
     }
     uint8_t programSize = programIt->size;
 
-    // Find bestfit memory partition 
+    // Find the best-fit memory partition.
     int partitionIndex = BestFitPartition(programSize);
     if (partitionIndex == -1) {
         std::cerr << "Error: No suitable partition found for program " << programName << ".\n";
         return;
     }
 
-    // Mark the partition as occupied by the program
+    // Mark the partition as occupied by the program.
     memoryPartitions[partitionIndex].code = programName;
 
-    // Update the child's PCB with the new partition information
+    // Update the child's PCB with the new partition information.
     childIt->partition_num = memoryPartitions[partitionIndex].num;
     childIt->state = "Running";
     
-    logExecution(rand() % 10 + 1, "Program " + programName + " loaded into Partition " +
-                 std::to_string(memoryPartitions[partitionIndex].num));
+    logExecution(rand() % 10 + 1, "EXEC: load " + programName + " of size " + std::to_string(programSize) + "MB");
+    logExecution(rand() % 10 + 1, "found partition " + std::to_string(memoryPartitions[partitionIndex].num) + 
+                 " with " + std::to_string(memoryPartitions[partitionIndex].size) + "MB of space");
+    logExecution(rand() % 10 + 1, "partition " + std::to_string(memoryPartitions[partitionIndex].num) + 
+                 " marked as occupied");
+    logExecution(rand() % 10 + 1, "updating PCB with new information");
     
-    // Call the scheduler
+    // Call the scheduler.
     scheduler();
 
-    // Return from ISR (simulated)
+    // Log the current system status.
+    logSystemStatus();
+
+    // Simulate reading the program trace.
+    std::string programTraceFile = programName + ".txt";
+    inputRead(programTraceFile, "vector_table.txt", filename);
+
+    // Return from ISR (simulated).
     logExecution(1, "Return from EXEC ISR");
 }
 
@@ -231,8 +221,6 @@ void logExecution(uint32_t duration, const std::string eventName) {
 void inputRead(std::string traceFileName, std::string vectorFileName, std::string outputFileName) {
     std::ifstream inputFile(traceFileName);
 
-    filename = outputFileName+".txt";
-
     if (!inputFile) {
         std::cerr << "Error when opening file: " << traceFileName << std::endl;
         return;
@@ -241,41 +229,45 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
     std::string line;
     std::vector<TraceEvent> events;
 
-    
     while (std::getline(inputFile, line)) {
         TraceEvent event;
         std::stringstream ss(line);
         std::string activity;
         std::string durationOrID;
 
+        // Parsing each line based on the event type.
         if (std::getline(ss, activity, ',') && std::getline(ss, durationOrID, ',')) {
-            std::stringstream durationStream(durationOrID);  
+            std::stringstream durationStream(durationOrID);
 
-            if (activity.find("CPU") != std::string::npos) {
+            if (activity.find("FORK") != std::string::npos) {
+                uint8_t parentPid;
+                durationStream >> parentPid;
+                forkProcess(parentPid);
+                logSystemStatus();
+            } else if (activity.find("EXEC") != std::string::npos) {
+                uint8_t childPid;
+                std::string programName;
+                durationStream >> childPid >> programName;
+                execProcess(childPid, programName);
+                logSystemStatus();
+            } else if (activity.find("CPU") != std::string::npos) {
                 event.name = "CPU";
                 durationStream >> event.duration;
-            } 
-            // Handle SYSCALL and END_IO events with multi-digit IDs
-            else if (activity.find("SYSCALL") != std::string::npos || activity.find("END_IO") != std::string::npos) {
-                event.name = activity.substr(0, activity.find_first_of(' '));  
-                event.ID = std::stoi(activity.substr(activity.find_last_of(' ') + 1));  
+                logExecution(event.duration, "CPU Execution");
+            } else if (activity.find("SYSCALL") != std::string::npos || activity.find("END_IO") != std::string::npos) {
+                event.name = activity.substr(0, activity.find_first_of(' '));
+                event.ID = std::stoi(activity.substr(activity.find_last_of(' ') + 1));
                 durationStream >> event.duration;
+                eventHandler(event, vectorFileName);
             }
-
-            // add events to vector
-            events.push_back(event);
         } else {
             std::cerr << "Error parsing line: " << line << std::endl;
         }
     }
 
     inputFile.close();
-
-    // process events
-    for (const auto& event : events) {
-        eventHandler(event, vectorFileName);  
-    }
 }
+
 
 
 std::vector<uint16_t> vectorTableHandler(std::string fileName) {
@@ -292,11 +284,6 @@ std::vector<uint16_t> vectorTableHandler(std::string fileName) {
     inputFile.close();
 
     return isrAddresses;
-}
-
-void initMemory() 
-{
-    
 }
 
 int main()
