@@ -16,55 +16,17 @@ std::vector<PCB> pcbTable;
 std::vector<ExternalFile> externalFiles; 
 
 
-void initMemory()
-{ 
-    memoryPartitions = 
-    { 
-        // from the instructions
-        {1,40, "free"},
-        {2, 25, "free"},
-        {3, 15, "free"}, 
-        {4, 10, "free"}, 
-        {5, 8, "free"}, 
-        {6, 2, "init"} 
-    }; 
-    // initialize the process in the 6th partition. 
-    pcbTable.push_back({0, 0, 0, 0, 6, "Running"});
-}
+// Memory initialization function.
+void initMemory() {
+    memoryPartitions.emplace_back(memoryPartition{1, 40, "free"});
+    memoryPartitions.emplace_back(memoryPartition{2, 25, "free"});
+    memoryPartitions.emplace_back(memoryPartition{3, 15, "free"});
+    memoryPartitions.emplace_back(memoryPartition{4, 10, "free"});
+    memoryPartitions.emplace_back(memoryPartition{5, 8, "free"});
+    memoryPartitions.emplace_back(memoryPartition{6, 2, "init"});
 
-void loadExternalFiles(std::string fileName) {
-
-    // similar to A1, reading an input file 
-    std::ifstream inputFile(fileName);
-    std::string line;
-
-    // loop over the file, line by line
-    while (std::getline(inputFile, line)) {
-        std::istringstream iss(line);
-        // declaring the file as a two component structure
-        ExternalFile file;
-
-        iss >> file.program_name >> file.size;
-
-        // add the files structs into the vector
-        externalFiles.push_back(file);
-    }
-    inputFile.close();
-}
-
-void forkProcess(uint8_t parentPid) {
-    // Find the parent's associated PCB to get its details
-    auto parentIt = std::find_if(pcbTable.begin(), pcbTable.end(),
-                                 [parentPid](const PCB& pcb){ return pcb.pid == parentPid; 
-    });
-    if (parentIt != pcbTable.end()) {
-        PCB child = *parentIt;
-        child.pid = pcbTable.size(); // Assign a new PID
-        child.state = "Ready";
-        pcbTable.push_back(child);
-
-        logExecution(2, "Forked process PID " + std::to_string(child.pid));
-    }
+    // Initialize the PCB with the 'init' process.
+    pcbTable.emplace_back(PCB{0, 0, 0, 0, 6, "Running"});
 }
 
 void logSystemStatus() {
@@ -91,10 +53,9 @@ void logSystemStatus() {
     }
 }
 
-
 int BestFitPartition(uint8_t programSize) {
     int bestIndex = -1;
-    uint8_t smallestSize = UINT32_MAX;
+    uint32_t smallestSize = UINT32_MAX;
 
     for (size_t i = 0; i < memoryPartitions.size(); ++i) {
         if (memoryPartitions[i].code == "free" && memoryPartitions[i].size >= programSize) {
@@ -112,22 +73,40 @@ void scheduler() {
     std::cout << "Scheduler called" << std::endl;
 }
 
+void forkProcess(uint8_t parentPid) {
+    auto parentIt = std::find_if(pcbTable.begin(), pcbTable.end(),
+                                 [parentPid](const PCB& pcb) {
+                                     return pcb.pid == parentPid;
+                                 });
+    if (parentIt != pcbTable.end()) {
+        PCB child = *parentIt;
+        child.pid = pcbTable.size(); // Assign a new PID.
+        child.state = "Ready";
+        pcbTable.push_back(child);
+
+        logExecution(2, "Forked process PID " + std::to_string(child.pid));
+    }
+}
+
 void execProcess(uint8_t childPid, std::string programName, std::string vectorFileName) {
-    // Find the child process PCB.
     auto childIt = std::find_if(pcbTable.begin(), pcbTable.end(),
-                                [childPid](const PCB& pcb) { return pcb.pid == childPid; });
+                                [childPid](const PCB& pcb) {
+                                    return pcb.pid == childPid;
+                                });
     if (childIt == pcbTable.end()) {
         std::cerr << "Error: Child process with PID " << childPid << " not found.\n";
         return;
     }
 
-    // Find the program size from the external files list.
     auto programIt = std::find_if(externalFiles.begin(), externalFiles.end(),
-                                  [&programName](const ExternalFile& file) { return file.program_name == programName; });
+                                  [&programName](const ExternalFile& file) {
+                                      return file.program_name == programName;
+                                  });
     if (programIt == externalFiles.end()) {
         std::cerr << "Error: Program " << programName << " not found in external files.\n";
         return;
     }
+
     uint8_t programSize = programIt->size;
 
     // Find the best-fit memory partition.
@@ -150,7 +129,7 @@ void execProcess(uint8_t childPid, std::string programName, std::string vectorFi
     logExecution(rand() % 10 + 1, "partition " + std::to_string(memoryPartitions[partitionIndex].num) + 
                  " marked as occupied");
     logExecution(rand() % 10 + 1, "updating PCB with new information");
-    
+
     // Call the scheduler.
     scheduler();
 
@@ -166,12 +145,6 @@ void execProcess(uint8_t childPid, std::string programName, std::string vectorFi
 }
 
 
-
-std::string toHex(uint16_t value, int width) {
-    std::stringstream ss;
-    ss << std::hex << std::uppercase << std::setw(width) << std::setfill('0') << value;
-    return ss.str();
-}
 
 void eventHandler(TraceEvent event, std::string fileName)
 {

@@ -16,6 +16,7 @@
 #include <iomanip>  
 #include <fstream>
 #include <stdint.h>
+#include <algorithm> // Include for std::find_if
 
 
 struct TraceEvent
@@ -53,7 +54,7 @@ void logExecution(uint32_t duration, std::string eventName);
 
 void eventHandler(TraceEvent event, std::string fileName);
 
-void inputRead(std::string traceFileName, std::string vectorFileName, std::string outputFileName)
+void inputRead(std::string traceFileName, std::string vectorFileName, std::string outputFileName);
 
 std::vector<uint16_t> vectorTableHandler(std::string fileName); 
 
