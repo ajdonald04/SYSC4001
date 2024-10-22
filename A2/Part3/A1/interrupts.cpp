@@ -136,7 +136,7 @@ void execProcess(uint8_t childPid, const std::string& programName) {
     }
     uint8_t programSize = programIt->size;
 
-    // Find the best-fit memory partition for the program
+    // Find bestfit memory partition 
     int partitionIndex = BestFitPartition(programSize);
     if (partitionIndex == -1) {
         std::cerr << "Error: No suitable partition found for program " << programName << ".\n";
