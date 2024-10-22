@@ -98,10 +98,68 @@ void logSystemStatus() {
     }
 }
 
-void execProcess(uint8_t childPid, std::string programName)
-{
+int BestFitPartition(uint8_t programSize) {
+    int bestIndex = -1;
+    uint8_t smallestSize = UINT32_MAX;
 
+    for (size_t i = 0; i < memoryPartitions.size(); ++i) {
+        if (memoryPartitions[i].code == "free" && memoryPartitions[i].size >= programSize) {
+            if (memoryPartitions[i].size < smallestSize) {
+                smallestSize = memoryPartitions[i].size;
+                bestIndex = i;
+            }
+        }
+    }
+    return bestIndex;
 }
+
+void scheduler() {
+    logExecution(1, "Scheduler called");
+    std::cout << "Scheduler called" << std::endl;
+}
+
+void execProcess(uint8_t childPid, const std::string& programName) {
+    // Find the child process PCB
+    auto childIt = std::find_if(pcbTable.begin(), pcbTable.end(),
+                                [childPid](const PCB& pcb) { return pcb.pid == childPid; });
+    if (childIt == pcbTable.end()) {
+        std::cerr << "Error: Child process with PID " << childPid << " not found.\n";
+        return;
+    }
+
+    // Find the program size from the external files list
+    auto programIt = std::find_if(externalFiles.begin(), externalFiles.end(),
+                                  [&programName](const ExternalFile& file) { return file.program_name == programName; });
+    if (programIt == externalFiles.end()) {
+        std::cerr << "Error: Program " << programName << " not found in external files.\n";
+        return;
+    }
+    uint8_t programSize = programIt->size;
+
+    // Find the best-fit memory partition for the program
+    int partitionIndex = BestFitPartition(programSize);
+    if (partitionIndex == -1) {
+        std::cerr << "Error: No suitable partition found for program " << programName << ".\n";
+        return;
+    }
+
+    // Mark the partition as occupied by the program
+    memoryPartitions[partitionIndex].code = programName;
+
+    // Update the child's PCB with the new partition information
+    childIt->partition_num = memoryPartitions[partitionIndex].num;
+    childIt->state = "Running";
+    
+    logExecution(rand() % 10 + 1, "Program " + programName + " loaded into Partition " +
+                 std::to_string(memoryPartitions[partitionIndex].num));
+    
+    // Call the scheduler
+    scheduler();
+
+    // Return from ISR (simulated)
+    logExecution(1, "Return from EXEC ISR");
+}
+
 
 
 std::string toHex(uint16_t value, int width) {
@@ -150,6 +208,7 @@ void eventHandler(TraceEvent event, std::string fileName)
         }
     } 
 }
+
 
 void logExecution(uint32_t duration, const std::string eventName) {
     
