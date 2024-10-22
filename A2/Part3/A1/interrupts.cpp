@@ -66,6 +66,33 @@ void forkProcess(uint8_t parentPid) {
         logExecution(2, "Forked process PID " + std::to_string(child.pid));
     }
 }
+
+int bestFitAlgorithim(std::vector<memoryPartition> memoryPartionTable, int programSize){
+    //This function will get called during the use of an EXEC system call
+    for (int i =0; i<6 ; i++){
+        if (memoryPartionTable[i].code == "free"){ //checks if a partion is free
+            if (memoryPartionTable[i].size >= programSize){ //if free checks the size
+                return i; // if bigger or =, return the index of the partion from the table
+            }
+        }
+        else{
+            std::cout << "No Memory?" << std::endl;
+        }
+    }
+
+}
+
+void execProcess(){
+// a. Simulates SYSCALL (Assignment 1)
+// b. The ISR uses the size of the new executable; should search the file in the file list, and obtain the memory size
+// c. It finds an empty partition where the executable fits (Assume best-fit policy)
+// d. It marks the partition as occupied
+// e. It records which process is using that partition
+// f. It updates the PCB with the new information
+// g. At the end of the ISR, you call the routine scheduler (), which is, for now, empty (it just displays “scheduler called”).
+// h. Return from the ISR (Assignment 1)
+
+}
 std::string toHex(uint16_t value, int width) {
     std::stringstream ss;
     ss << std::hex << std::uppercase << std::setw(width) << std::setfill('0') << value;
@@ -86,6 +113,10 @@ void eventHandler(TraceEvent event, std::string fileName)
     {
         logExecution(event.duration, "CPU Execution");
     }
+
+    //Event handler for fork
+
+    //Event handler for exec
 
     // check that event ID is within bounds of the vector table
     if (event.ID >= 0 && event.ID < vectorTableSize) {
@@ -165,6 +196,8 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
                 durationStream >> event.duration;
             }
 
+            //Handle Fork AND Exec
+
             // add events to vector
             events.push_back(event);
         } else {
@@ -197,10 +230,7 @@ std::vector<uint16_t> vectorTableHandler(std::string fileName) {
     return isrAddresses;
 }
 
-void initMemory() 
-{
-    
-}
+
 
 int main()
 {
