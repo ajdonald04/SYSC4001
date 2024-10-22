@@ -112,7 +112,7 @@ void scheduler() {
     std::cout << "Scheduler called" << std::endl;
 }
 
-void execProcess(uint8_t childPid, std::string programName) {
+void execProcess(uint8_t childPid, std::string programName, std::string vectorFileName) {
     // Find the child process PCB.
     auto childIt = std::find_if(pcbTable.begin(), pcbTable.end(),
                                 [childPid](const PCB& pcb) { return pcb.pid == childPid; });
@@ -159,7 +159,7 @@ void execProcess(uint8_t childPid, std::string programName) {
 
     // Simulate reading the program trace.
     std::string programTraceFile = programName + ".txt";
-    inputRead(programTraceFile, "vector_table.txt", filename);
+    inputRead(programTraceFile, vectorFileName, filename);
 
     // Return from ISR (simulated).
     logExecution(1, "Return from EXEC ISR");
@@ -236,6 +236,10 @@ void logExecution(uint32_t duration, const std::string eventName) {
 void inputRead(std::string traceFileName, std::string vectorFileName, std::string outputFileName) {
     std::ifstream inputFile(traceFileName);
 
+    // Set the global filename for logging execution events.
+    filename = outputFileName + ".txt";
+
+    // Check if the input trace file opens successfully.
     if (!inputFile) {
         std::cerr << "Error when opening file: " << traceFileName << std::endl;
         return;
@@ -244,39 +248,48 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
     std::string line;
     std::vector<TraceEvent> events;
 
+    // Read the trace file line by line.
     while (std::getline(inputFile, line)) {
-        TraceEvent event;
         std::stringstream ss(line);
-        std::string activity;
-        std::string durationOrID;
+        std::string command;
+        ss >> command;
 
-        // Parsing each line based on the event type.
-        if (std::getline(ss, activity, ',') && std::getline(ss, durationOrID, ',')) {
-            std::stringstream durationStream(durationOrID);
+        // Handle FORK commands.
+        if (command == "FORK") {
+            uint8_t parentPid;
+            ss >> parentPid;
+            forkProcess(parentPid);
+            logSystemStatus();
+        } 
+        // Handle EXEC commands.
+        else if (command == "EXEC") {
+            uint8_t childPid;
+            std::string programName;
+            ss >> childPid >> programName;
+            execProcess(childPid, programName, vectorFileName);
+        } 
+        // Handle other events like CPU, SYSCALL, END_IO.
+        else {
+            TraceEvent event;
+            std::string durationOrID;
+            if (std::getline(ss, durationOrID, ',')) {
+                std::stringstream durationStream(durationOrID);
 
-            if (activity.find("FORK") != std::string::npos) {
-                uint8_t parentPid;
-                durationStream >> parentPid;
-                forkProcess(parentPid);
-                logSystemStatus();
-            } else if (activity.find("EXEC") != std::string::npos) {
-                uint8_t childPid;
-                std::string programName;
-                durationStream >> childPid >> programName;
-                execProcess(childPid, programName);
-                logSystemStatus();
-            } else if (activity.find("CPU") != std::string::npos) {
-                event.name = "CPU";
-                durationStream >> event.duration;
-                logExecution(event.duration, "CPU Execution");
-            } else if (activity.find("SYSCALL") != std::string::npos || activity.find("END_IO") != std::string::npos) {
-                event.name = activity.substr(0, activity.find_first_of(' '));
-                event.ID = std::stoi(activity.substr(activity.find_last_of(' ') + 1));
-                durationStream >> event.duration;
-                eventHandler(event, vectorFileName);
+                if (command.find("CPU") != std::string::npos) {
+                    event.name = "CPU";
+                    durationStream >> event.duration;
+                    logExecution(event.duration, "CPU Execution");
+                } 
+                // Handle SYSCALL and END_IO with IDs.
+                else if (command.find("SYSCALL") != std::string::npos || command.find("END_IO") != std::string::npos) {
+                    event.name = command.substr(0, command.find_first_of(' '));
+                    event.ID = std::stoi(command.substr(command.find_last_of(' ') + 1));
+                    durationStream >> event.duration;
+                    eventHandler(event, vectorFileName);
+                }
+            } else {
+                std::cerr << "Error parsing line: " << line << std::endl;
             }
-        } else {
-            std::cerr << "Error parsing line: " << line << std::endl;
         }
     }
 
