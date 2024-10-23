@@ -29,6 +29,44 @@ void initMemory() {
     pcbTable.emplace_back(PCB{0, 0, 0, 0, 6, "Running"});
 }
 
+void loadExternalFiles(std::string fileName) {
+    std::ifstream inputFile(fileName);
+    std::string line;
+
+    // Clear existing entries if this function is called more than once.
+    externalFiles.clear();
+
+    if (!inputFile) {
+        std::cerr << "Error when opening file: " << fileName << std::endl;
+        return;
+    }
+
+    // Read each line from the external files input.
+    while (std::getline(inputFile, line)) {
+        std::istringstream iss(line);
+        ExternalFile file;
+        std::string programSizeStr;
+
+        // Parse the program name and size.
+        if (std::getline(iss, file.program_name, ',') && std::getline(iss, programSizeStr)) {
+            // Trim any extra spaces or newlines.
+            file.program_name.erase(std::remove_if(file.program_name.begin(), file.program_name.end(), ::isspace), file.program_name.end());
+            programSizeStr.erase(std::remove_if(programSizeStr.begin(), programSizeStr.end(), ::isspace), programSizeStr.end());
+            
+            file.size = static_cast<uint8_t>(std::stoi(programSizeStr));
+
+            // Add the file to the vector.
+            externalFiles.push_back(file);
+
+            // Debug output to confirm the loading.
+            std::cout << "Loaded external file: " << file.program_name << " with size " << static_cast<int>(file.size) << " MB" << std::endl;
+        } else {
+            std::cerr << "Error parsing line in external_files.txt: " << line << std::endl;
+        }
+    }
+    inputFile.close();
+}
+
 void logSystemStatus() {
     std::ofstream outputFile("system_status.txt", std::ios::app);
 
@@ -89,6 +127,12 @@ void forkProcess(uint8_t parentPid) {
 }
 
 void execProcess(uint8_t childPid, std::string programName, std::string vectorFileName) {
+    // Trim spaces from the program name to ensure proper matching.
+    programName.erase(std::remove_if(programName.begin(), programName.end(), ::isspace), programName.end());
+
+    // Print debug information to see what is being looked for.
+    std::cout << "Attempting to execute program: " << programName << std::endl;
+
     auto childIt = std::find_if(pcbTable.begin(), pcbTable.end(),
                                 [childPid](const PCB& pcb) {
                                     return pcb.pid == childPid;
@@ -102,6 +146,12 @@ void execProcess(uint8_t childPid, std::string programName, std::string vectorFi
                                   [&programName](const ExternalFile& file) {
                                       return file.program_name == programName;
                                   });
+
+    // Debug output to confirm what program names are being checked.
+    for (const auto& file : externalFiles) {
+        std::cout << "Available program in external files: " << file.program_name << std::endl;
+    }
+
     if (programIt == externalFiles.end()) {
         std::cerr << "Error: Program " << programName << " not found in external files.\n";
         return;
@@ -143,6 +193,7 @@ void execProcess(uint8_t childPid, std::string programName, std::string vectorFi
     // Return from ISR (simulated).
     logExecution(1, "Return from EXEC ISR");
 }
+
 
 
 
@@ -247,6 +298,10 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
             ss.ignore(1, ','); // Skip the comma.
             ss >> programName;
 
+            // Remove any trailing comma or whitespace.
+            programName.erase(std::remove_if(programName.begin(), programName.end(), ::isspace), programName.end());
+            programName.erase(std::remove(programName.begin(), programName.end(), ','), programName.end());
+
             if (ss.fail()) {
                 std::cerr << "Error parsing EXEC command: " << line << std::endl;
                 continue;
@@ -317,22 +372,33 @@ std::vector<uint16_t> vectorTableHandler(std::string fileName) {
     return isrAddresses;
 }
 
-int main()
-{
+int main() {
+    std::string vectorFileName, traceFileName, outputFileName, externalFilesName;
 
-    std::string vectorFileName, TraceFile, outputFileName; 
-
-    std::cout << "Enter the vector table file name: "; 
-    std::cin >> vectorFileName; 
-    
+    // Get the file names from the user.
+    std::cout << "Enter the vector table file name: ";
+    std::cin >> vectorFileName;
 
     std::cout << "Enter the trace file name: ";
-    std::cin >> TraceFile; 
+    std::cin >> traceFileName;
 
-    std::cout << "Enter the file name: (without extension): ";
-    std::cin >> outputFileName; 
+    std::cout << "Enter the output file name (without extension): ";
+    std::cin >> outputFileName;
 
-    inputRead(TraceFile, vectorFileName,outputFileName);
-    
+    std::cout << "Enter the external files list name: ";
+    std::cin >> externalFilesName;
+
+    // Initialize the memory (fixed partitions) for the simulator.
+    initMemory();
+
+    // Load the external files (e.g., program1, program2) from the specified file.
+    loadExternalFiles(externalFilesName);
+
+    // Start processing the trace file.
+    inputRead(traceFileName, vectorFileName, outputFileName);
+
+    std::cout << "Simulation completed. Check 'execution.txt' and 'system_status.txt' for details." << std::endl;
+
     return 0;
 }
+
