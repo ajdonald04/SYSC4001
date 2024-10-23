@@ -72,6 +72,6 @@ void forkProcess(uint8_t parentPID);
 void execProcess(uint8_t childPid, std::string programName, std::string vectorFileName);
 
 void logSystemStatus(); 
-
+void inputReadForkExec(std::string traceFileName, std::string vectorFileName); 
 
 #endif
