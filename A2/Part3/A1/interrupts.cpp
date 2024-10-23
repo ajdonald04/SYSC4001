@@ -250,7 +250,7 @@ void logExecution(uint32_t duration, const std::string eventName) {
 // Original inputRead function for CPU, SYSCALL, and END_IO
 void inputRead(std::string traceFileName, std::string vectorFileName, std::string outputFileName) {
     std::ifstream inputFile(traceFileName);
-    
+    filename = outputFileName;
 
     if (!inputFile) {
         std::cerr << "Error when opening file: " << traceFileName << std::endl;
@@ -300,9 +300,8 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
 }
 
 // New inputReadForkExec function specifically for FORK and EXEC
-void inputReadForkExec(std::string traceFileName, std::string vectorFileName, const std::string& outputFileName) {
+void inputReadForkExec(std::string traceFileName, std::string vectorFileName) {
     std::ifstream inputFile(traceFileName);
-    filename = outputFileName;
 
     if (!inputFile) {
         std::cerr << "Error when opening file: " << traceFileName << std::endl;
@@ -391,8 +390,9 @@ int main() {
 
     initMemory();
     loadExternalFiles(externalFilesName);
-    inputRead(traceFileName, vectorFileName, outputFileName); // Handle CPU, SYSCALL, and END_IO
-    inputReadForkExec(traceFileName, vectorFileName, outputFileName); // Handle FORK and EXEC
+    filename = outputFileName + ".txt"; // Set the filename for logging here
+    inputRead(traceFileName, vectorFileName, filename); // Handle CPU, SYSCALL, and END_IO
+    inputReadForkExec(traceFileName, vectorFileName); // Handle FORK and EXEC
 
     std::cout << "Simulation completed. Check '" << outputFileName << ".txt' and 'system_status.txt' for details." << std::endl;
 
