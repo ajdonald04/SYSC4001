@@ -187,6 +187,12 @@ void eventHandler(TraceEvent event, std::string fileName)
     } 
 }
 
+std::string toHex(uint16_t value, int width) {
+    std::stringstream ss;
+    ss << std::hex << std::uppercase << std::setw(width) << std::setfill('0') << value;
+    return ss.str();
+}
+
 
 void logExecution(uint32_t duration, const std::string eventName) {
     
