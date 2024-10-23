@@ -1,20 +1,22 @@
-/**
- * Implementation of functions for SYSC4001 A1
- * 
- * Authors: Aj Donald 101259149, Jayven Larsen 101260364
- */
 #include "interrupts.hpp"
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <vector>
+#include <queue>
+#include <iomanip>
+#include <algorithm>
+#include <cstdint>
 
-
-// variable to track simulation time
+// Variable to track simulation time.
 static uint32_t sim_time = 0;
 std::string filename;
 
-// declaring vectors for structures (partitions, pcb and external files)
+// Declaring vectors for structures (partitions, PCB, and external files).
 std::vector<memoryPartition> memoryPartitions;
 std::vector<PCB> pcbTable; 
 std::vector<ExternalFile> externalFiles; 
-
 
 // Memory initialization function.
 void initMemory() {
@@ -32,8 +34,6 @@ void initMemory() {
 void loadExternalFiles(std::string fileName) {
     std::ifstream inputFile(fileName);
     std::string line;
-
-    // Clear existing entries if this function is called more than once.
     externalFiles.clear();
 
     if (!inputFile) {
@@ -41,24 +41,18 @@ void loadExternalFiles(std::string fileName) {
         return;
     }
 
-    // Read each line from the external files input.
     while (std::getline(inputFile, line)) {
         std::istringstream iss(line);
         ExternalFile file;
         std::string programSizeStr;
 
-        // Parse the program name and size.
         if (std::getline(iss, file.program_name, ',') && std::getline(iss, programSizeStr)) {
-            // Trim any extra spaces or newlines.
             file.program_name.erase(std::remove_if(file.program_name.begin(), file.program_name.end(), ::isspace), file.program_name.end());
             programSizeStr.erase(std::remove_if(programSizeStr.begin(), programSizeStr.end(), ::isspace), programSizeStr.end());
             
             file.size = static_cast<uint8_t>(std::stoi(programSizeStr));
-
-            // Add the file to the vector.
             externalFiles.push_back(file);
 
-            // Debug output to confirm the loading.
             std::cout << "Loaded external file: " << file.program_name << " with size " << static_cast<int>(file.size) << " MB" << std::endl;
         } else {
             std::cerr << "Error parsing line in external_files.txt: " << line << std::endl;
@@ -122,15 +116,15 @@ void forkProcess(uint8_t parentPid) {
         child.state = "Ready";
         pcbTable.push_back(child);
 
-        logExecution(2, "Forked process PID " + std::to_string(child.pid));
+        logExecution(4, "FORK: copy parent PCB to child PCB");
+        logExecution(rand() % 10 + 6, "Scheduler called");
+        logExecution(1, "IRET");
     }
 }
 
 void execProcess(uint8_t childPid, std::string programName, std::string vectorFileName) {
-    // Clean up the program name for proper matching.
     programName.erase(std::remove_if(programName.begin(), programName.end(), ::isspace), programName.end());
 
-    // Check if the child process exists.
     auto childIt = std::find_if(pcbTable.begin(), pcbTable.end(),
                                 [childPid](const PCB& pcb) {
                                     return pcb.pid == childPid;
@@ -140,7 +134,6 @@ void execProcess(uint8_t childPid, std::string programName, std::string vectorFi
         return;
     }
 
-    // Find the program details.
     auto programIt = std::find_if(externalFiles.begin(), externalFiles.end(),
                                   [&programName](const ExternalFile& file) {
                                       return file.program_name == programName;
@@ -151,20 +144,16 @@ void execProcess(uint8_t childPid, std::string programName, std::string vectorFi
     }
 
     uint8_t programSize = programIt->size;
-
-    // Find the best-fit memory partition.
     int partitionIndex = BestFitPartition(programSize);
     if (partitionIndex == -1) {
         std::cerr << "Error: No suitable partition found for program " << programName << ".\n";
         return;
     }
 
-    // Update the partition and PCB with the new program information.
     memoryPartitions[partitionIndex].code = programName;
     childIt->partition_num = memoryPartitions[partitionIndex].num;
     childIt->state = "Running";
 
-    // Log the detailed steps of the EXEC.
     logExecution(1, "Switch to Kernel Mode");
     logExecution(rand() % 3 + 1, "Save Context");
     logExecution(1, "Find vector #3 in memory position 0x0006");
@@ -176,21 +165,13 @@ void execProcess(uint8_t childPid, std::string programName, std::string vectorFi
                  " marked as occupied");
     logExecution(rand() % 10 + 2, "Updating PCB with new information");
 
-    // Call the scheduler and log the system status.
     scheduler();
     logSystemStatus();
+    logExecution(1, "IRET");
 
-    // Now, read and execute the program trace.
     std::string programTraceFile = programName + ".txt";
     inputRead(programTraceFile, vectorFileName, filename);
-
-    // Log the return from the ISR.
-    logExecution(1, "IRET");
 }
-
-
-
-
 
 void eventHandler(TraceEvent event, std::string fileName) {
     std::vector<uint16_t> isrAddresses = vectorTableHandler(fileName);
@@ -232,20 +213,12 @@ void eventHandler(TraceEvent event, std::string fileName) {
     }
 }
 
-
-
 void logExecution(uint32_t duration, const std::string eventName) {
-    
-
     std::ofstream outputFile(filename, std::ios::app);
 
-
     if (outputFile.is_open()) {
-        // log an event (sim time, duration, and event name)
         outputFile << sim_time << ", " << duration << ", " << eventName << std::endl;
-
         sim_time += duration;
-
         outputFile.close();
     } else {
         std::cerr << "Error: Unable to open execution.txt file for logging" << std::endl;
@@ -253,11 +226,9 @@ void logExecution(uint32_t duration, const std::string eventName) {
 }
 
 void inputRead(std::string traceFileName, std::string vectorFileName, std::string outputFileName) {
-    std::ifstream inputFile(traceFileName);
     std::queue<std::string> fileQueue;
-    fileQueue.push(traceFileName); // Start with the initial trace file.
+    fileQueue.push(traceFileName);
 
-    // Set the global filename for logging execution events.
     filename = outputFileName + ".txt";
 
     while (!fileQueue.empty()) {
@@ -271,14 +242,11 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
         }
 
         std::string line;
-
-        // Read the current trace file line by line.
         while (std::getline(inputFile, line)) {
             std::stringstream ss(line);
             std::string command;
             ss >> command;
 
-            // Handle FORK commands.
             if (command == "FORK") {
                 uint8_t parentPid;
                 ss.ignore(1, ',');
@@ -292,9 +260,7 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
                 forkProcess(parentPid);
                 logSystemStatus();
                 logExecution(1, "IRET");
-            } 
-            // Handle EXEC commands.
-            else if (command == "EXEC") {
+            } else if (command == "EXEC") {
                 std::string programName;
                 ss.ignore(1, ',');
                 ss >> programName;
@@ -307,19 +273,12 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
                     continue;
                 }
 
-                // Create a new child process with the next available PID.
                 uint8_t childPid = pcbTable.size();
                 pcbTable.push_back(PCB{childPid, 0, 0, 0, 0, "Ready"});
 
-                // Execute the program and switch trace.
                 execProcess(childPid, programName, vectorFileName);
-
-                // Add the new program trace file to the queue.
-                std::string programTraceFile = programName + ".txt";
-                fileQueue.push(programTraceFile);
-            } 
-            // Handle other instructions such as CPU or SYSCALL.
-            else {
+                fileQueue.push(programName + ".txt");
+            } else {
                 TraceEvent event;
                 std::string durationOrID;
                 if (std::getline(ss, durationOrID, ',')) {
@@ -329,14 +288,12 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
                         event.name = "CPU";
                         durationStream >> event.duration;
                         logExecution(event.duration, "CPU Execution");
-                    } 
-                    else if (command.find("SYSCALL") != std::string::npos) {
+                    } else if (command.find("SYSCALL") != std::string::npos) {
                         event.name = "SYSCALL";
                         ss >> event.ID;
                         durationStream >> event.duration;
                         eventHandler(event, vectorFileName);
-                    } 
-                    else if (command.find("END_IO") != std::string::npos) {
+                    } else if (command.find("END_IO") != std::string::npos) {
                         event.name = "END_IO";
                         ss >> event.ID;
                         durationStream >> event.duration;
@@ -354,17 +311,11 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
     std::cout << "Finished processing all traces." << std::endl;
 }
 
-
-
-
-
-
 std::string toHex(uint16_t value, int width) {
     std::stringstream ss;
     ss << std::hex << std::uppercase << std::setw(width) << std::setfill('0') << value;
     return ss.str();
 }
-
 
 std::vector<uint16_t> vectorTableHandler(std::string fileName) {
     std::vector<uint16_t> isrAddresses;
@@ -385,7 +336,6 @@ std::vector<uint16_t> vectorTableHandler(std::string fileName) {
 int main() {
     std::string vectorFileName, traceFileName, outputFileName, externalFilesName;
 
-    // Get the file names from the user.
     std::cout << "Enter the vector table file name: ";
     std::cin >> vectorFileName;
 
@@ -398,17 +348,11 @@ int main() {
     std::cout << "Enter the external files list name: ";
     std::cin >> externalFilesName;
 
-    // Initialize the memory (fixed partitions) for the simulator.
     initMemory();
-
-    // Load the external files (e.g., program1, program2) from the specified file.
     loadExternalFiles(externalFilesName);
-
-    // Start processing the trace file.
     inputRead(traceFileName, vectorFileName, outputFileName);
 
     std::cout << "Simulation completed. Check 'execution.txt' and 'system_status.txt' for details." << std::endl;
 
     return 0;
 }
-
