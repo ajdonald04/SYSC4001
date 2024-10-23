@@ -130,9 +130,6 @@ void execProcess(uint8_t childPid, std::string programName, std::string vectorFi
     // Trim spaces from the program name to ensure proper matching.
     programName.erase(std::remove_if(programName.begin(), programName.end(), ::isspace), programName.end());
 
-    // Print debug information to see what is being looked for.
-    std::cout << "Attempting to execute program: " << programName << std::endl;
-
     auto childIt = std::find_if(pcbTable.begin(), pcbTable.end(),
                                 [childPid](const PCB& pcb) {
                                     return pcb.pid == childPid;
@@ -146,11 +143,6 @@ void execProcess(uint8_t childPid, std::string programName, std::string vectorFi
                                   [&programName](const ExternalFile& file) {
                                       return file.program_name == programName;
                                   });
-
-    // Debug output to confirm what program names are being checked.
-    for (const auto& file : externalFiles) {
-        std::cout << "Available program in external files: " << file.program_name << std::endl;
-    }
 
     if (programIt == externalFiles.end()) {
         std::cerr << "Error: Program " << programName << " not found in external files.\n";
@@ -174,11 +166,11 @@ void execProcess(uint8_t childPid, std::string programName, std::string vectorFi
     childIt->state = "Running";
     
     logExecution(rand() % 10 + 1, "EXEC: load " + programName + " of size " + std::to_string(programSize) + "MB");
-    logExecution(rand() % 10 + 1, "found partition " + std::to_string(memoryPartitions[partitionIndex].num) + 
+    logExecution(rand() % 10 + 1, "Found partition " + std::to_string(memoryPartitions[partitionIndex].num) + 
                  " with " + std::to_string(memoryPartitions[partitionIndex].size) + "MB of space");
-    logExecution(rand() % 10 + 1, "partition " + std::to_string(memoryPartitions[partitionIndex].num) + 
+    logExecution(rand() % 10 + 1, "Partition " + std::to_string(memoryPartitions[partitionIndex].num) + 
                  " marked as occupied");
-    logExecution(rand() % 10 + 1, "updating PCB with new information");
+    logExecution(rand() % 10 + 1, "Updating PCB with new information");
 
     // Call the scheduler.
     scheduler();
@@ -190,12 +182,9 @@ void execProcess(uint8_t childPid, std::string programName, std::string vectorFi
     std::string programTraceFile = programName + ".txt";
     inputRead(programTraceFile, vectorFileName, filename);
 
-    // Return from ISR (simulated).
+    // Log completion of the EXEC process.
     logExecution(1, "Return from EXEC ISR");
 }
-
-
-
 
 void eventHandler(TraceEvent event, std::string fileName)
 {
