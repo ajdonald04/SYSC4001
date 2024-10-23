@@ -288,7 +288,6 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
                 continue;
             }
 
-            std::cout << "Parsed FORK command: parent PID = " << static_cast<int>(parentPid) << std::endl;
             forkProcess(parentPid);
             logSystemStatus();
         } 
@@ -298,7 +297,7 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
             ss.ignore(1, ','); // Skip the comma.
             ss >> programName;
 
-            // Remove any trailing comma or whitespace.
+            // Remove any trailing commas or whitespace.
             programName.erase(std::remove_if(programName.begin(), programName.end(), ::isspace), programName.end());
             programName.erase(std::remove(programName.begin(), programName.end(), ','), programName.end());
 
@@ -307,16 +306,12 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
                 continue;
             }
 
-            // Create a new child process based on the last forked process or use the next PID.
+            // Create a new child process with the next available PID.
             uint8_t childPid = pcbTable.size(); // Use the next available PID.
 
             // Add the child process to the PCB table.
             pcbTable.push_back(PCB{childPid, 0, 0, 0, 0, "Ready"});
 
-            std::cout << "Parsed EXEC command: child PID = " << static_cast<int>(childPid)
-                      << ", program name = " << programName << std::endl;
-
-            // Now call execProcess with the created child PID.
             execProcess(childPid, programName, vectorFileName);
         } 
         // Handle other events like CPU, SYSCALL, END_IO.
@@ -334,9 +329,18 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
                 // Handle SYSCALL and END_IO with IDs.
                 else if (command.find("SYSCALL") != std::string::npos || command.find("END_IO") != std::string::npos) {
                     event.name = command.substr(0, command.find_first_of(' '));
-                    event.ID = std::stoi(command.substr(command.find_last_of(' ') + 1));
-                    durationStream >> event.duration;
-                    eventHandler(event, vectorFileName);
+
+                    // Extract the ID from the command.
+                    std::string idStr = command.substr(command.find_last_of(' ') + 1);
+                    try {
+                        event.ID = std::stoi(idStr);
+                        durationStream >> event.duration;
+                        eventHandler(event, vectorFileName);
+                    } catch (const std::invalid_argument&) {
+                        std::cerr << "Error: Invalid argument when converting ID '" << idStr << "' to integer." << std::endl;
+                    } catch (const std::out_of_range&) {
+                        std::cerr << "Error: Out of range when converting ID '" << idStr << "' to integer." << std::endl;
+                    }
                 }
             } else {
                 std::cerr << "Error parsing line: " << line << std::endl;
@@ -346,6 +350,7 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
 
     inputFile.close();
 }
+
 
 
 
