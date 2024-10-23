@@ -190,13 +190,12 @@ void eventHandler(TraceEvent event, std::string fileName) {
 
     if (event.ID > 0 && event.ID <= vectorTableSize) {
         uint16_t ISRAddress = isrAddresses[event.ID - 1];
-        uint16_t memoryPosition = event.ID * 2; 
+        uint16_t memoryPosition = event.ID * 2;
 
         if (event.name == "SYSCALL") {
             logExecution(1, "Switch to Kernel Mode");
             logExecution(rand() % 3 + 1, "Save Context");
-            logExecution(1, "Find vector #" + std::to_string(event.ID) + 
-                            " in memory position 0x" + toHex(memoryPosition, 4));
+            logExecution(1, "Find vector #" + std::to_string(event.ID) + " in memory position 0x" + toHex(memoryPosition, 4));
             logExecution(1, "Load address 0x" + toHex(ISRAddress, 4) + " into PC");
             logExecution(event.duration, "SYSCALL: run the ISR");
             logExecution(1, "IRET");
@@ -206,14 +205,14 @@ void eventHandler(TraceEvent event, std::string fileName) {
             logExecution(1, "Check if the interrupt is masked");
             logExecution(1, "Switch to Kernel Mode");
             logExecution(rand() % 3 + 1, "Save Context");
-            logExecution(1, "Find vector #" + std::to_string(event.ID) + 
-                            " in memory position 0x" + toHex(memoryPosition, 4));
+            logExecution(1, "Find vector #" + std::to_string(event.ID) + " in memory position 0x" + toHex(memoryPosition, 4));
             logExecution(1, "Load address 0x" + toHex(ISRAddress, 4));
             logExecution(event.duration, "I/O Completed");
             logExecution(1, "IRET");
         }
     }
 }
+
 
 void logExecution(uint32_t duration, const std::string eventName) {
     std::ofstream outputFile(filename, std::ios::app);
@@ -237,69 +236,67 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
     }
 
     std::string line;
+    std::vector<TraceEvent> events;
 
+    // Read each line and parse events into the events vector.
     while (std::getline(inputFile, line)) {
+        TraceEvent event;
         std::stringstream ss(line);
-        std::string command;
-        ss >> command;
+        std::string activity;
+        std::string durationOrID;
 
-        if (command == "FORK") {
-            uint8_t parentPid;
-            ss.ignore(1, ',');
-            ss >> parentPid;
-            forkProcess(parentPid);
-            logSystemStatus();
-            logExecution(1, "IRET");
-        } 
-        else if (command == "EXEC") {
-            std::string programName;
-            ss.ignore(1, ',');
-            ss >> programName;
+        // Parse the activity and duration/ID.
+        if (std::getline(ss, activity, ',') && std::getline(ss, durationOrID, ',')) {
+            std::stringstream durationStream(durationOrID);
 
-            // Clean up any extra spaces or trailing commas in the program name.
-            programName.erase(std::remove_if(programName.begin(), programName.end(), ::isspace), programName.end());
-            programName.erase(std::remove(programName.begin(), programName.end(), ','), programName.end());
+            if (activity.find("CPU") != std::string::npos) {
+                event.name = "CPU";
+                durationStream >> event.duration;
+            } 
+            // Handle SYSCALL and END_IO events.
+            else if (activity.find("SYSCALL") != std::string::npos || activity.find("END_IO") != std::string::npos) {
+                event.name = activity.substr(0, activity.find_first_of(' '));  
+                event.ID = std::stoi(activity.substr(activity.find_last_of(' ') + 1));  
+                durationStream >> event.duration;
+            } 
+            // Handle other instructions such as FORK and EXEC.
+            else if (activity == "FORK") {
+                uint8_t parentPid;
+                durationStream >> parentPid;
+                forkProcess(parentPid);
+                logSystemStatus();
+                logExecution(1, "IRET");
+                continue; // Skip adding to the vector, as it's already handled.
+            } 
+            else if (activity == "EXEC") {
+                std::string programName;
+                durationStream >> programName;
+                programName.erase(std::remove_if(programName.begin(), programName.end(), ::isspace), programName.end());
+                programName.erase(std::remove(programName.begin(), programName.end(), ','), programName.end());
 
-            // Debug statement to verify program name after cleanup.
-            std::cout << "EXEC command received for program: '" << programName << "'" << std::endl;
-
-            // Create a new child process and execute the program.
-            uint8_t childPid = pcbTable.size();
-            pcbTable.push_back(PCB{childPid, 0, 0, 0, 0, "Ready"});
-            execProcess(childPid, programName, vectorFileName);
-        } 
-        else {
-            std::string durationOrID;
-            if (std::getline(ss, durationOrID, ',')) {
-                TraceEvent event;
-                std::stringstream durationStream(durationOrID);
-
-                if (command == "CPU") {
-                    event.name = "CPU";
-                    durationStream >> event.duration;
-                    eventHandler(event, vectorFileName);
-                } 
-                else if (command.find("SYSCALL") != std::string::npos) {
-                    event.name = "SYSCALL";
-                    ss >> event.ID;
-                    durationStream >> event.duration;
-                    eventHandler(event, vectorFileName);
-                } 
-                else if (command.find("END_IO") != std::string::npos) {
-                    event.name = "END_IO";
-                    ss >> event.ID;
-                    durationStream >> event.duration;
-                    eventHandler(event, vectorFileName);
-                }
-            } else {
-                std::cerr << "Error parsing line: " << line << std::endl;
+                uint8_t childPid = pcbTable.size();
+                pcbTable.push_back(PCB{childPid, 0, 0, 0, 0, "Ready"});
+                execProcess(childPid, programName, vectorFileName);
+                continue; // Skip adding to the vector, as it's already handled.
             }
+
+            // Add the parsed event to the vector.
+            events.push_back(event);
+        } else {
+            std::cerr << "Error parsing line: " << line << std::endl;
         }
     }
 
     inputFile.close();
+
+    // Process all parsed events.
+    for (const auto& event : events) {
+        eventHandler(event, vectorFileName);
+    }
+
     std::cout << "Finished reading trace file: " << traceFileName << std::endl;
 }
+
 
 
 std::string toHex(uint16_t value, int width) {
