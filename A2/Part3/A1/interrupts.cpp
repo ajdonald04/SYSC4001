@@ -187,12 +187,6 @@ void eventHandler(TraceEvent event, std::string fileName)
     } 
 }
 
-std::string toHex(uint16_t value, int width) {
-    std::stringstream ss;
-    ss << std::hex << std::uppercase << std::setw(width) << std::setfill('0') << value;
-    return ss.str();
-}
-
 
 void logExecution(uint32_t duration, const std::string eventName) {
     
@@ -225,7 +219,6 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
     }
 
     std::string line;
-    std::vector<TraceEvent> events;
 
     // Read the trace file line by line.
     while (std::getline(inputFile, line)) {
@@ -236,15 +229,39 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
         // Handle FORK commands.
         if (command == "FORK") {
             uint8_t parentPid;
+            ss.ignore(1, ','); // Skip the comma.
             ss >> parentPid;
+
+            if (ss.fail()) {
+                std::cerr << "Error parsing FORK command: " << line << std::endl;
+                continue;
+            }
+
+            std::cout << "Parsed FORK command: parent PID = " << static_cast<int>(parentPid) << std::endl;
             forkProcess(parentPid);
             logSystemStatus();
         } 
         // Handle EXEC commands.
         else if (command == "EXEC") {
-            uint8_t childPid;
             std::string programName;
-            ss >> childPid >> programName;
+            ss.ignore(1, ','); // Skip the comma.
+            ss >> programName;
+
+            if (ss.fail()) {
+                std::cerr << "Error parsing EXEC command: " << line << std::endl;
+                continue;
+            }
+
+            // Create a new child process based on the last forked process or use the next PID.
+            uint8_t childPid = pcbTable.size(); // Use the next available PID.
+
+            // Add the child process to the PCB table.
+            pcbTable.push_back(PCB{childPid, 0, 0, 0, 0, "Ready"});
+
+            std::cout << "Parsed EXEC command: child PID = " << static_cast<int>(childPid)
+                      << ", program name = " << programName << std::endl;
+
+            // Now call execProcess with the created child PID.
             execProcess(childPid, programName, vectorFileName);
         } 
         // Handle other events like CPU, SYSCALL, END_IO.
@@ -275,6 +292,13 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
     inputFile.close();
 }
 
+
+
+std::string toHex(uint16_t value, int width) {
+    std::stringstream ss;
+    ss << std::hex << std::uppercase << std::setw(width) << std::setfill('0') << value;
+    return ss.str();
+}
 
 
 std::vector<uint16_t> vectorTableHandler(std::string fileName) {
