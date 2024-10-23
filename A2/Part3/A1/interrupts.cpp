@@ -170,7 +170,9 @@ void execProcess(uint8_t childPid, std::string programName, std::string vectorFi
     logExecution(1, "IRET");
 
     std::string programTraceFile = programName + ".txt";
+    std::cout << "Switching to program trace: " << programTraceFile << std::endl;
     inputRead(programTraceFile, vectorFileName, filename);
+    std::cout << "Finished reading program trace: " << programTraceFile << std::endl;
 }
 
 void eventHandler(TraceEvent event, std::string fileName) {
@@ -226,90 +228,79 @@ void logExecution(uint32_t duration, const std::string eventName) {
 }
 
 void inputRead(std::string traceFileName, std::string vectorFileName, std::string outputFileName) {
-    std::queue<std::string> fileQueue;
-    fileQueue.push(traceFileName);
-
+    std::ifstream inputFile(traceFileName);
     filename = outputFileName + ".txt";
 
-    while (!fileQueue.empty()) {
-        std::string currentFile = fileQueue.front();
-        fileQueue.pop();
-        std::ifstream inputFile(currentFile);
-
-        if (!inputFile) {
-            std::cerr << "Error when opening file: " << currentFile << std::endl;
-            continue;
-        }
-
-        std::string line;
-        while (std::getline(inputFile, line)) {
-            std::stringstream ss(line);
-            std::string command;
-            ss >> command;
-
-            if (command == "FORK") {
-                uint8_t parentPid;
-                ss.ignore(1, ',');
-                ss >> parentPid;
-
-                if (ss.fail()) {
-                    std::cerr << "Error parsing FORK command: " << line << std::endl;
-                    continue;
-                }
-
-                forkProcess(parentPid);
-                logSystemStatus();
-                logExecution(1, "IRET");
-            } else if (command == "EXEC") {
-                std::string programName;
-                ss.ignore(1, ',');
-                ss >> programName;
-
-                programName.erase(std::remove_if(programName.begin(), programName.end(), ::isspace), programName.end());
-                programName.erase(std::remove(programName.begin(), programName.end(), ','), programName.end());
-
-                if (ss.fail()) {
-                    std::cerr << "Error parsing EXEC command: " << line << std::endl;
-                    continue;
-                }
-
-                uint8_t childPid = pcbTable.size();
-                pcbTable.push_back(PCB{childPid, 0, 0, 0, 0, "Ready"});
-
-                execProcess(childPid, programName, vectorFileName);
-                fileQueue.push(programName + ".txt");
-            } else {
-                TraceEvent event;
-                std::string durationOrID;
-                if (std::getline(ss, durationOrID, ',')) {
-                    std::stringstream durationStream(durationOrID);
-
-                    if (command == "CPU") {
-                        event.name = "CPU";
-                        durationStream >> event.duration;
-                        logExecution(event.duration, "CPU Execution");
-                    } else if (command.find("SYSCALL") != std::string::npos) {
-                        event.name = "SYSCALL";
-                        ss >> event.ID;
-                        durationStream >> event.duration;
-                        eventHandler(event, vectorFileName);
-                    } else if (command.find("END_IO") != std::string::npos) {
-                        event.name = "END_IO";
-                        ss >> event.ID;
-                        durationStream >> event.duration;
-                        eventHandler(event, vectorFileName);
-                    }
-                } else {
-                    std::cerr << "Error parsing line: " << line << std::endl;
-                }
-            }
-        }
-
-        inputFile.close();
+    if (!inputFile) {
+        std::cerr << "Error when opening file: " << traceFileName << std::endl;
+        return;
     }
 
-    std::cout << "Finished processing all traces." << std::endl;
+    std::string line;
+
+    while (std::getline(inputFile, line)) {
+        std::stringstream ss(line);
+        std::string command;
+        ss >> command;
+
+        if (command == "FORK") {
+            uint8_t parentPid;
+            ss.ignore(1, ',');
+            ss >> parentPid;
+            forkProcess(parentPid);
+            logSystemStatus();
+            logExecution(1, "IRET");
+        } 
+        else if (command == "EXEC") {
+            std::string programName;
+            ss.ignore(1, ',');
+            ss >> programName;
+
+            // Clean up any extra spaces or trailing commas in the program name.
+            programName.erase(std::remove_if(programName.begin(), programName.end(), ::isspace), programName.end());
+            programName.erase(std::remove(programName.begin(), programName.end(), ','), programName.end());
+
+            // Debug statement to verify program name after cleanup.
+            std::cout << "EXEC command received for program: '" << programName << "'" << std::endl;
+
+            // Create a new child process and execute the program.
+            uint8_t childPid = pcbTable.size();
+            pcbTable.push_back(PCB{childPid, 0, 0, 0, 0, "Ready"});
+            execProcess(childPid, programName, vectorFileName);
+        } 
+        else {
+            std::string durationOrID;
+            if (std::getline(ss, durationOrID, ',')) {
+                TraceEvent event;
+                std::stringstream durationStream(durationOrID);
+
+                if (command == "CPU") {
+                    event.name = "CPU";
+                    durationStream >> event.duration;
+                    eventHandler(event, vectorFileName);
+                } 
+                else if (command.find("SYSCALL") != std::string::npos) {
+                    event.name = "SYSCALL";
+                    ss >> event.ID;
+                    durationStream >> event.duration;
+                    eventHandler(event, vectorFileName);
+                } 
+                else if (command.find("END_IO") != std::string::npos) {
+                    event.name = "END_IO";
+                    ss >> event.ID;
+                    durationStream >> event.duration;
+                    eventHandler(event, vectorFileName);
+                }
+            } else {
+                std::cerr << "Error parsing line: " << line << std::endl;
+            }
+        }
+    }
+
+    inputFile.close();
+    std::cout << "Finished reading trace file: " << traceFileName << std::endl;
 }
+
 
 std::string toHex(uint16_t value, int width) {
     std::stringstream ss;
@@ -352,7 +343,7 @@ int main() {
     loadExternalFiles(externalFilesName);
     inputRead(traceFileName, vectorFileName, outputFileName);
 
-    std::cout << "Simulation completed. Check 'execution.txt' and 'system_status.txt' for details." << std::endl;
+    std::cout << "Simulation completed. Check '" << outputFileName << ".txt' and 'system_status.txt' for details." << std::endl;
 
     return 0;
 }
