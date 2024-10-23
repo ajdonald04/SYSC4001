@@ -11,7 +11,7 @@
 
 // Variable to track simulation time.
 static uint32_t sim_time = 0;
-std::string filename; // Use this for logging execution events
+std::string filename; // Used for logging execution events
 
 // Declaring vectors for structures (partitions, PCB, and external files).
 std::vector<memoryPartition> memoryPartitions;
@@ -195,7 +195,6 @@ void execProcess(uint8_t childPid, std::string programName, std::string vectorFi
     std::cout << "Finished reading program trace: " << programTraceFile << std::endl;
 }
 
-
 void eventHandler(TraceEvent event, std::string fileName) {
     std::vector<uint16_t> isrAddresses = vectorTableHandler(fileName);
     int vectorTableSize = isrAddresses.size();
@@ -237,7 +236,7 @@ void eventHandler(TraceEvent event, std::string fileName) {
 }
 
 void logExecution(uint32_t duration, const std::string eventName) {
-    std::ofstream outputFile(filename, std::ios::app);
+    std::ofstream outputFile(filename, std::ios::app); // Open in append mode
 
     if (outputFile.is_open()) {
         outputFile << sim_time << ", " << duration << ", " << eventName << std::endl;
@@ -251,7 +250,7 @@ void logExecution(uint32_t duration, const std::string eventName) {
 // Original inputRead function for CPU, SYSCALL, and END_IO
 void inputRead(std::string traceFileName, std::string vectorFileName, std::string outputFileName) {
     std::ifstream inputFile(traceFileName);
-    filename = outputFileName + ".txt"; // Set the filename for logging
+    
 
     if (!inputFile) {
         std::cerr << "Error when opening file: " << traceFileName << std::endl;
@@ -301,8 +300,9 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
 }
 
 // New inputReadForkExec function specifically for FORK and EXEC
-void inputReadForkExec(std::string traceFileName, std::string vectorFileName) {
+void inputReadForkExec(std::string traceFileName, std::string vectorFileName, const std::string& outputFileName) {
     std::ifstream inputFile(traceFileName);
+    filename = outputFileName;
 
     if (!inputFile) {
         std::cerr << "Error when opening file: " << traceFileName << std::endl;
@@ -392,7 +392,7 @@ int main() {
     initMemory();
     loadExternalFiles(externalFilesName);
     inputRead(traceFileName, vectorFileName, outputFileName); // Handle CPU, SYSCALL, and END_IO
-    inputReadForkExec(traceFileName, vectorFileName); // Handle FORK and EXEC
+    inputReadForkExec(traceFileName, vectorFileName, outputFileName); // Handle FORK and EXEC
 
     std::cout << "Simulation completed. Check '" << outputFileName << ".txt' and 'system_status.txt' for details." << std::endl;
 
