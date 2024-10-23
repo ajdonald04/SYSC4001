@@ -321,26 +321,23 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
             if (std::getline(ss, durationOrID, ',')) {
                 std::stringstream durationStream(durationOrID);
 
-                if (command.find("CPU") != std::string::npos) {
+                if (command == "CPU") {
                     event.name = "CPU";
                     durationStream >> event.duration;
                     logExecution(event.duration, "CPU Execution");
                 } 
                 // Handle SYSCALL and END_IO with IDs.
-                else if (command.find("SYSCALL") != std::string::npos || command.find("END_IO") != std::string::npos) {
-                    event.name = command.substr(0, command.find_first_of(' '));
-
-                    // Extract the ID from the command.
-                    std::string idStr = command.substr(command.find_last_of(' ') + 1);
-                    try {
-                        event.ID = std::stoi(idStr);
-                        durationStream >> event.duration;
-                        eventHandler(event, vectorFileName);
-                    } catch (const std::invalid_argument&) {
-                        std::cerr << "Error: Invalid argument when converting ID '" << idStr << "' to integer." << std::endl;
-                    } catch (const std::out_of_range&) {
-                        std::cerr << "Error: Out of range when converting ID '" << idStr << "' to integer." << std::endl;
-                    }
+                else if (command.find("SYSCALL") != std::string::npos) {
+                    event.name = "SYSCALL";
+                    ss >> event.ID; // Extract the ID.
+                    durationStream >> event.duration;
+                    eventHandler(event, vectorFileName);
+                } 
+                else if (command.find("END_IO") != std::string::npos) {
+                    event.name = "END_IO";
+                    ss >> event.ID; // Extract the ID.
+                    durationStream >> event.duration;
+                    eventHandler(event, vectorFileName);
                 }
             } else {
                 std::cerr << "Error parsing line: " << line << std::endl;
