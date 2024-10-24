@@ -267,8 +267,7 @@ void eventHandler(TraceEvent event, std::string fileName) {
     }
 }
 
-// Adjust inputRead to parse FORK events into TraceEvents
-// Original inputRead function for CPU, SYSCALL, and END_IO
+// Updated inputRead function to handle events immediately
 void inputRead(std::string traceFileName, std::string vectorFileName, std::string outputFileName) {
     std::ifstream inputFile(traceFileName);
     filename = outputFileName;
@@ -279,9 +278,8 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
     }
 
     std::string line;
-    std::vector<TraceEvent> events;
 
-    // Read each line and parse events into the events vector
+    // Read each line and process events directly
     while (std::getline(inputFile, line)) {
         TraceEvent event;
         std::stringstream ss(line);
@@ -298,6 +296,7 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
             if (activity.find("CPU") != std::string::npos) {
                 event.name = "CPU";
                 durationStream >> event.duration;
+                event.ID = 0; // No ID for CPU events
             } 
             else if (activity.find("FORK") != std::string::npos) {
                 event.name = "FORK";
@@ -308,6 +307,15 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
                     std::cerr << "Invalid argument for FORK: " << durationOrID << std::endl;
                     continue; // Skip this line
                 }
+            } 
+            else if (activity.find("EXEC") != std::string::npos) {
+                event.name = "EXEC";
+                // Extract program name
+                std::string programName = activity.substr(activity.find(' ') + 1);
+                event.ID = pcbTable.size(); // Use current size for new child PID
+                // Call execProcess directly
+                execProcess(event.ID, programName, vectorFileName); 
+                continue; // Skip adding this event to the vector since it's handled inline
             } 
             else if (activity.find("SYSCALL") != std::string::npos || activity.find("END_IO") != std::string::npos) {
                 event.name = activity.substr(0, activity.find_first_of(' '));  
@@ -320,21 +328,15 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
                 durationStream >> event.duration;
             }
 
-            // Add the parsed event to the vector
-            events.push_back(event);
+            // Call eventHandler immediately after parsing
+            eventHandler(event, vectorFileName);
         } else {
             std::cerr << "Error parsing line: " << line << std::endl;
         }
     }
 
     inputFile.close();
-
-    // Process all parsed events
-    for (const auto& event : events) {
-        eventHandler(event, vectorFileName);  
-    }
-
-    std::cout << "Finished processing CPU, SYSCALL, and END_IO events." << std::endl;
+    std::cout << "Finished processing CPU, SYSCALL, FORK, and EXEC events." << std::endl;
 }
 
 
