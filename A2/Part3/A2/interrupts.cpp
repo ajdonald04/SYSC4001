@@ -75,6 +75,7 @@ void logSystemStatus() {
         outputFile << "+--------------------------------------------+\n";
         outputFile << "| PID |Program Name |Partition Number | size |\n";
         outputFile << "+--------------------------------------------+\n";
+        // for each loop to iterate over the table
         for (const auto& pcb : pcbTable) {
             auto programName = memoryPartitions[pcb.partition_num - 1].code;
             outputFile << "| " << std::setw(3) << pcb.pid << " | "
