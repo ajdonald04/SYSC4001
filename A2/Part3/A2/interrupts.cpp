@@ -330,6 +330,44 @@ std::string toHex(uint16_t value, int width) {
     return ss.str();
 }
 
+void inputReadForkExec(std::string traceFileName, std::string vectorFileName) {
+    std::ifstream inputFile(traceFileName);
+
+    if (!inputFile) {
+        std::cerr << "Error when opening file: " << traceFileName << std::endl;
+        return;
+    }
+
+    std::string line;
+
+    while (std::getline(inputFile, line)) {
+        std::stringstream ss(line);
+        std::string command;
+        ss >> command;
+
+        if (command == "EXEC") {
+            std::string programName;
+            ss.ignore(1, ','); // Ignore the comma
+            ss >> programName; // Read program name
+
+            programName.erase(std::remove_if(programName.begin(), programName.end(), ::isspace), programName.end());
+
+            if (ss.fail()) {
+                std::cerr << "Error parsing EXEC command: " << line << std::endl;
+                continue;
+            }
+
+            uint8_t childPid = pcbTable.size(); // Use current size for new child PID
+            pcbTable.push_back(PCB{childPid, 0, 0, 0, 0, "Ready"}); // Initialize new child PCB
+
+            execProcess(childPid, programName, vectorFileName); // Execute the program
+        }
+    }
+
+    inputFile.close();
+    std::cout << "Finished processing FORK and EXEC commands." << std::endl;
+}
+
 std::vector<uint16_t> vectorTableHandler(std::string fileName) {
     std::vector<uint16_t> isrAddresses;
     std::ifstream inputFile(fileName);
@@ -365,7 +403,7 @@ int main() {
     loadExternalFiles(externalFilesName);
     filename = outputFileName + ".txt"; // file for logging
     inputRead(traceFileName, vectorFileName, filename); 
-
+    inputReadForkExec(traceFileName, vectorFileName); // new function to handle FORK and EXEC
     std::cout << "Simulation completed. Check '" << outputFileName << ".txt' and 'system_status.txt' for details." << std::endl;
 
     return 0;
