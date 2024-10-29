@@ -300,7 +300,6 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
                 event.name = "EXEC";
                 std::string programName = activity.substr(activity.find(' ') + 1);
                 event.ID = pcbTable.size(); // Use current size for new child PID
-                // Call execProcess directly
                 execProcess(event.ID, programName, vectorFileName); 
                 continue;
             } 
@@ -326,6 +325,7 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
     std::cout << "Finished processing CPU, SYSCALL, FORK, and EXEC events." << std::endl;
 }
 
+// function to convert the addresses to hex 
 std::string toHex(uint16_t value, int width) {
     std::stringstream ss;
     ss << std::hex << std::uppercase << std::setw(width) << std::setfill('0') << value;
