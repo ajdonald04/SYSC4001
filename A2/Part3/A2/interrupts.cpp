@@ -12,16 +12,16 @@
 #include "interrupts.hpp"
 
 
-// Variable to track simulation time.
+// global variable to track simulation time.
 static uint32_t sim_time = 0;
 std::string filename; // Used for logging execution events
 
-// Declaring vectors for structures (partitions, PCB, and external files).
+// declaring vectors for structures (mem partitions, PCB, and external files).
 std::vector<memoryPartition> memoryPartitions;
 std::vector<PCB> pcbTable; 
 std::vector<ExternalFile> externalFiles; 
 
-// Memory initialization function.
+// Memory initialization
 void initMemory() {
     memoryPartitions.emplace_back(memoryPartition{1, 40, "free"});
     memoryPartitions.emplace_back(memoryPartition{2, 25, "free"});
@@ -34,6 +34,7 @@ void initMemory() {
     pcbTable.emplace_back(PCB{0, 0, 0, 0, 6, "Running"});
 }
 
+// helper function for loading the programs in external_file.txt
 void loadExternalFiles(std::string fileName) {
     std::ifstream inputFile(fileName);
     std::string line;
@@ -64,6 +65,7 @@ void loadExternalFiles(std::string fileName) {
     inputFile.close();
 }
 
+// function that generates the log for the system stats
 void logSystemStatus() {
     std::ofstream outputFile("system_status.txt", std::ios::app);
 

@@ -6,7 +6,7 @@
 * Note: Due to the difficulties encountered during the assignment of the teams for A2, 
 this assignment had already been completed with my previous partner from A1, (Jayven Larsen, 101260364).
 As a result, the solutions of this submission for all parts was completed with him. Having discussed with Professor Wainer,
-we have understood that there shouldn't be any risk of plagiarism between our two groups given this mistake. 
+ * we have understood that there shouldn't be any risk of plagiarism between our two groups given this mistake. 
 */
 
 #include <iostream>
@@ -49,7 +49,6 @@ int main() {
         exit(1);
     }
 
-    // loop until the value in shared memory is zero
     while (*shared_var != 0) {
         
         // lock the semaphore before using shared memory (similarly to parent process)
@@ -57,7 +56,8 @@ int main() {
         cout << "Process 2: Shared random number is: " << *shared_var << endl;
         sleep(1);
 
-        semop(semid, &sem_unlock, 1); // unlock the semaphore after reading shared memory
+        // unlock the semaphore after reading shared memory
+        semop(semid, &sem_unlock, 1); 
     }
 
     // detach shared memory

@@ -32,7 +32,6 @@ int main() {
         exit(1);
     }
 
-    // Initialize the shared variable
     *shared_var = -1;
 
     // create the semaphore used.
@@ -47,7 +46,6 @@ int main() {
         cerr << "Failed to initialize semaphore" << endl;
         exit(1);
     }
-
 
     pid_t pid = fork();
 
@@ -83,18 +81,17 @@ int main() {
             sleep(1); 
         }
 
-        // shmdt is used to detach the memory 
+        // detach memory
         shmdt(shared_var);
         cout << "Process 1 finished" << endl;
     } else {
-        // Parent waits for child to finish 
+        // parent waits for child to finish 
         waitpid(pid, nullptr, 0);
 
-        // cleanup shared memory after processes are finished
+        // cleanup shared memory 
         shmctl(shmid, IPC_RMID, nullptr);
         cout << "Parent cleaned up shared memory" << endl;
-
-        // cleanup the semaphore after processes are finished
+        // cleanup the semaphore
         semctl(semid, 0, IPC_RMID);
     }
 
