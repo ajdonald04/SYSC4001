@@ -1,7 +1,12 @@
 /**
- * Definition of functions used for SYSC4001 A1
+ * Definition of functions used for SYSC4001 A2
  * 
- * Authors: Aj Donald 101259149, Jayven Larsen 101260364
+ * Authors: Aj Donald 101259149, Simon Hagos
+ * 
+ *Note: Due to the difficulties encountered during the assignment of the teams for A2, 
+this assignment had already been completed with my previous partner from A1, (Jayven Larsen, 101260364).
+ As a result, the solutions of this submission for all parts was completed with him. Having discussed with Professor Wainer,
+ we have understood that there shouldn't be any risk of plagiarism between our two groups given this mistake. 
  */
 
 #ifndef INTERRUPTS_HPP
@@ -16,7 +21,7 @@
 #include <iomanip>  
 #include <fstream>
 #include <stdint.h>
-#include <algorithm> // Include for std::find_if
+#include <algorithm> 
 
 
 struct TraceEvent
@@ -38,14 +43,14 @@ struct PCB
     uint8_t IO_time; 
     uint8_t rem_cpu; 
     uint8_t partition_num; 
-    std::string state; // process state, running, ready or waiting, etc.
+    std::string state;
 };
 
 struct memoryPartition
 {
     uint8_t num; 
     uint8_t size; 
-    std::string code; //    
+    std::string code; //
 };
 
 
@@ -72,6 +77,5 @@ void forkProcess(uint8_t parentPID);
 void execProcess(uint8_t childPid, std::string programName, std::string vectorFileName);
 
 void logSystemStatus(); 
-void inputReadForkExec(std::string traceFileName, std::string vectorFileName); 
 
 #endif
