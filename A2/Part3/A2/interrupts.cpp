@@ -186,7 +186,7 @@ void execProcess(uint8_t childPid, std::string programName, std::string vectorFi
     std::cout << "Switching to program trace: " << programTraceFile << std::endl;
 
     // Call the function to read events from the program's trace file
-    inputRead(programTraceFile, vectorFileName, filename); // Now passes the output filename
+    inputRead(programTraceFile, vectorFileName, filename);
 }
 
 
@@ -202,7 +202,6 @@ void logExecution(uint32_t duration, const std::string eventName) {
     }
 }
 
-// Updated eventHandler to handle FORK events
 void eventHandler(TraceEvent event, std::string fileName) {
     std::vector<uint16_t> isrAddresses = vectorTableHandler(fileName);
     int vectorTableSize = isrAddresses.size();
