@@ -1,3 +1,14 @@
+/*
+* SYSC4001 A2 Part2 
+*
+* Authors: Aj Donald 101259149 & Simon Hagos
+*
+* Note: Due to the difficulties encountered during the assignment of the teams for A2, 
+this assignment had already been completed with my previous partner from A1, (Jayven Larsen, 101260364).
+As a result, the solutions of this submission for all parts was completed with him. Having discussed with Professor Wainer,
+we have understood that there shouldn't be any risk of plagiarism between our two groups given this mistake. 
+*/
+
 #include <iostream>
 using namespace std;
 #include <unistd.h>
@@ -13,25 +24,25 @@ struct sembuf sem_unlock = {0, 1, 0}; // V: signal/increment
 int main() {
     
     // similarly to the other file, create a key before shared memory allocation occurs (shmget)
-    key_t key = ftok("shmfile", 65); // same key as P1
+    key_t key = ftok("shmfile", 65); // same key as Process 1 
     int shmid = shmget(key, sizeof(int), 0666); 
     
-    // checking validity
+    // error checking
     if (shmid < 0) {
         cerr << "Process 2: Failed to access shared memory" << endl;
         exit(1);
     }
 
-    // attach the memory segment
+    // attach the segment
     int *shared_var = (int *)shmat(shmid, nullptr, 0);
 
-    // error / validity checking, ensuring memory is attached correctly
+    // more error checking
     if (shared_var == (void *)-1) {
         cerr << "Process 2: Failed to attach shared memory" << endl;
         exit(1);
     }
 
-    // access the sempahore
+    // access sempahore
     int semid = semget(key, 1, 0666);
     if (semid < 0) {
         cerr << "Process 2: Failed to access semaphore" << endl;

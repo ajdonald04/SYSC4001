@@ -8,7 +8,7 @@ using namespace std;
 #include <sys/sem.h>
 #include <time.h>
 
-// semaphore structures for operations (P and V)
+// semaphore structs for operations (P and V)
 struct sembuf sem_lock = {0, -1, 0}; // P: wait/decrement
 struct sembuf sem_unlock = {0, 1, 0}; // V: signal/increment
 
@@ -17,8 +17,8 @@ int main() {
     // generate a key to use as an "id" for the shared memory
     key_t key = ftok("shmfile", 65); 
     
-    // Create shared memory segment (store it in shmid)
-    // 0666 is a permission mode OR IPC_CREAT means create if it doenst exist.
+    // here we create shared memory segment (store it in shmid)
+    // 0666 is a permission mode to use, otherwise IPC_CREAT means create if it doenst exist.
     int shmid = shmget(key, sizeof(int), 0666 | IPC_CREAT); // shmget, allocate the shared memory, 
     if (shmid < 0) {
         cerr << "Failed to create shared memory" << endl;
