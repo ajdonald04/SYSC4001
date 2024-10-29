@@ -4,12 +4,6 @@
  * October 23rd, 2024
  */
 
-/**
- * Main code for SYSC4001 A2
- * Authors: Aj Donald 101259149, Jayven Larsen 101260364
- * October 23rd, 2024
- */
-
 #include "interrupts.hpp"
 #include <iostream>
 #include <fstream>
