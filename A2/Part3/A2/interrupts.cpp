@@ -1,18 +1,16 @@
 /**
  * Main code for SYSC4001 A2
- * Authors: Aj Donald 101259149, Jayven Larsen 101260364
+ * Authors: Aj Donald 101259149, Simon Hagos ()
  * October 23rd, 2024
+ * 
+ * Note: Due to the difficulties encountered during the assignment of the teams for A2, 
+ * this assignment had already been completed with my previous partner from A1, (Jayven Larsen, 101260364).
+ * As a result, the solutions of this submission for all parts was completed with him. Having discussed with Professor Wainer,
+ * we have understood that there shouldn't be any risk of plagiarism between our two groups given this mistake. 
  */
 
 #include "interrupts.hpp"
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <string>
-#include <vector>
-#include <iomanip>
-#include <algorithm>
-#include <cstdint>
+
 
 // Variable to track simulation time.
 static uint32_t sim_time = 0;
