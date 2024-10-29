@@ -163,11 +163,10 @@ void execProcess(uint8_t childPid, std::string programName, std::string vectorFi
     }
 
     // Update mem partition and PCB
-    memoryPartitions[partitionIndex].code = programName; // Mark the partition with the program name
-    childIt->partition_num = memoryPartitions[partitionIndex].num; // Update the partition number in PCB
-    childIt->state = "Running"; // Set the state of the child process to running
+    memoryPartitions[partitionIndex].code = programName; 
+    childIt->partition_num = memoryPartitions[partitionIndex].num; // Update partition num in PCB
+    childIt->state = "Running"; // process can be considered running now
 
-    // log execution 
     logExecution(1, "Switch to Kernel Mode");
     logExecution(rand() % 3 + 1, "Save Context");
     logExecution(1, "Find vector #3 in memory position 0x0006");
