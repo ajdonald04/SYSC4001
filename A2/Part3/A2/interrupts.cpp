@@ -143,7 +143,6 @@ void execProcess(uint8_t childPid, std::string programName, std::string vectorFi
     programName.erase(std::remove_if(programName.begin(), programName.end(), ::isspace), programName.end());
     programName.erase(std::remove(programName.begin(), programName.end(), ','), programName.end()); // Remove trailing commas
 
-    std::cout << "Searching for program: " << programName << std::endl; // Debug statement
 
     // Search for the program in the external files list
     auto programIt = std::find_if(externalFiles.begin(), externalFiles.end(),
