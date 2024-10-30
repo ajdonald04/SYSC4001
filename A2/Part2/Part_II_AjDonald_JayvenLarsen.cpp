@@ -20,6 +20,7 @@ struct sembuf sem_lock = {0, -1, 0}; // P: wait/decrement
 struct sembuf sem_unlock = {0, 1, 0}; // V: signal/increment
 
 int main() {
+    srand(time(0));
 
     // generate a key to use as an "id" for the shared memory
     key_t key = ftok("shmfile", 65); 
@@ -80,7 +81,7 @@ int main() {
             
             // execute process 2 if the number is 9
             if (*shared_var == 9) {
-                execl("/Users/jayven/sysc4001/A2/Part2/process2", "process2", nullptr);
+                execl("/Users/jayvenlarsen/gitRepo/sysc4001/A2/Part2/Part_II_AjDonald_JayvenLarsen_program2", "Part_II_AjDonald_JayvenLarsen_program2", nullptr);
                 cerr << "Failed to launch Process 2!" << endl;
                 exit(1);
             }
