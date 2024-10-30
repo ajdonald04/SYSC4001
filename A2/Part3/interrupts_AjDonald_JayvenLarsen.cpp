@@ -162,7 +162,6 @@ void execProcess(uint8_t childPid, std::string programName, std::string vectorFi
     // Log the execution process and system status
     logExecution(1, "Switch to Kernel Mode");
     logExecution(rand() % 10 + 2, "EXEC: load " + programName + " of size " + std::to_string(programSize) + "MB");
-    logSystemStatus();
 
     
     std::string programTraceFile = programName + ".txt";
@@ -272,7 +271,6 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
                 event.name = "FORK";
                 event.ID = pcbTable.back().pid; // Last process ID as parent for FORK
                 forkProcess(event.ID);
-                logSystemStatus();
             } 
             else if (activity.find("EXEC") != std::string::npos) {
                 event.name = "EXEC";
