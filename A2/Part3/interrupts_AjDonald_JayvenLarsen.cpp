@@ -61,31 +61,42 @@ void loadExternalFiles(std::string fileName) {
     inputFile.close();
 }
 
-// function that generates the log for the system stats
-void logSystemStatus() {
+void logSystemStatus(const std::string &currentProgramName) {
     std::ofstream outputFile("system_status_AjDonald_JayvenLarsen.txt", std::ios::app);
 
     if (outputFile.is_open()) {
         outputFile << "!-----------------------------------------------------------!\n";
+        outputFile << "Program Context: " << currentProgramName << "\n";
         outputFile << "Save Time: " << sim_time << " ms\n";
         outputFile << "+--------------------------------------------+\n";
-        outputFile << "| PID |Program Name |Partition Number | size |\n";
+        outputFile << "| PID | Program Name | Partition Number | Size |\n";
         outputFile << "+--------------------------------------------+\n";
-        // for each loop to iterate over the table
+
         for (const auto& pcb : pcbTable) {
-            auto programName = memoryPartitions[pcb.partition_num - 1].code;
-            outputFile << "| " << std::setw(3) << pcb.pid << " | "
-                       << std::setw(12) << programName << " | "
-                       << std::setw(15) << pcb.partition_num << " | "
-                       << std::setw(4) << memoryPartitions[pcb.partition_num - 1].size << " |\n";
+            std::string programName = (pcb.partition_num > 0 && pcb.partition_num <= memoryPartitions.size())
+                ? memoryPartitions[pcb.partition_num - 1].code : "Undefined";
+            int partitionSize = (pcb.partition_num > 0 && pcb.partition_num <= memoryPartitions.size())
+                ? memoryPartitions[pcb.partition_num - 1].size : 0;
+
+
+            if (programName.empty() || programName != currentProgramName) {
+                programName = currentProgramName;  // Assign current program name
+            }
+
+            outputFile << "| " << std::setw(3) << pcb.pid 
+                       << " | " << std::setw(12) << (programName.empty() ? "Free" : programName) 
+                       << " | " << std::setw(15) << (pcb.partition_num == 0 ? "None" : std::to_string(pcb.partition_num)) 
+                       << " | " << std::setw(4) << partitionSize << " |\n";
         }
+        
         outputFile << "+--------------------------------------------+\n";
         outputFile << "!-----------------------------------------------------------!\n";
         outputFile.close();
     } else {
-        std::cerr << "Error: Unable to open system_status.txt for logging\n";
+        std::cerr << "Error: Unable to open system_status_AjDonald_JayvenLarsen.txt for logging\n";
     }
 }
+
 
 int BestFitPartition(uint8_t programSize) {
     int bestIndex = -1;
@@ -118,6 +129,7 @@ void forkProcess(uint8_t parentPid) {
         child.state = "Ready"; // Set child's state to Ready
         pcbTable.push_back(child); // Add child to PCB table
 
+
     } else {
         std::cerr << "Error: Parent PID " << parentPid << " not found." << std::endl;
     }
@@ -134,9 +146,7 @@ void execProcess(uint8_t childPid, std::string programName, std::string vectorFi
         return;
     }
 
-    // Trim whitespace from program name
     programName.erase(std::remove_if(programName.begin(), programName.end(), ::isspace), programName.end());
-    programName.erase(std::remove(programName.begin(), programName.end(), ','), programName.end()); 
 
     auto programIt = std::find_if(externalFiles.begin(), externalFiles.end(),
                                   [&programName](const ExternalFile& file) {
@@ -154,18 +164,14 @@ void execProcess(uint8_t childPid, std::string programName, std::string vectorFi
         return;
     }
 
-    // Assign program to memory partition and update PCB
     memoryPartitions[partitionIndex].code = programName;
     childIt->partition_num = memoryPartitions[partitionIndex].num;
     childIt->state = "Running";
 
-    // Log the execution process and system status
-    logExecution(1, "Switch to Kernel Mode");
-    logExecution(rand() % 10 + 2, "EXEC: load " + programName + " of size " + std::to_string(programSize) + "MB");
+    logSystemStatus(programName);
 
-    
     std::string programTraceFile = programName + ".txt";
-    inputRead(programTraceFile, vectorFileName, filename);
+    inputRead(programTraceFile, vectorFileName, filename, programName);
 }
 
 
@@ -203,8 +209,6 @@ void eventHandler(TraceEvent event, std::string fileName) {
         logExecution(1, "Scheduler called"); 
         logExecution(1, "IRET");
 
-        // Log the system status after FORK
-        logSystemStatus();
         forkProcess(parentPid); // Process the fork
     }
 
@@ -237,7 +241,7 @@ void eventHandler(TraceEvent event, std::string fileName) {
     }
 }
 
-void inputRead(std::string traceFileName, std::string vectorFileName, std::string outputFileName) {
+void inputRead(std::string traceFileName, std::string vectorFileName, std::string outputFileName, std::string currentProgramName = "init") {
     std::ifstream inputFile(traceFileName);
     filename = outputFileName;
 
@@ -250,7 +254,7 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
 
     while (std::getline(inputFile, line)) {
         if (line.empty()) {
-            continue; // Skip empty lines
+            continue;
         }
 
         TraceEvent event;
@@ -258,37 +262,32 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
         std::string activity;
         std::string durationOrID;
 
-        // Parse event type and duration or ID
         if (std::getline(ss, activity, ',') && std::getline(ss, durationOrID, ',')) {
             std::stringstream durationStream(durationOrID);
 
             if (activity.find("CPU") != std::string::npos) {
                 event.name = "CPU";
                 durationStream >> event.duration;
-                event.ID = 0; // No ID for CPU events
+                event.ID = 0;
             } 
             else if (activity.find("FORK") != std::string::npos) {
                 event.name = "FORK";
-                event.ID = pcbTable.back().pid; // Last process ID as parent for FORK
+                event.ID = pcbTable.back().pid;
                 forkProcess(event.ID);
+                logSystemStatus(currentProgramName);
             } 
             else if (activity.find("EXEC") != std::string::npos) {
                 event.name = "EXEC";
                 std::string programName = activity.substr(activity.find(' ') + 1);
-                event.ID = pcbTable.size(); // Assign new child PID
-
-                // Run execProcess to switch to new trace file
-                execProcess(event.ID, programName, vectorFileName); 
-
-                // Swap to the new trace file (program.txt file) to execute the process.
-                std::string programTraceFile = programName + ".txt";
-                inputRead(programTraceFile, vectorFileName, outputFileName);
-                continue; 
+                event.ID = pcbTable.size();
+                execProcess(event.ID, programName, vectorFileName);
+                inputRead(programName + ".txt", vectorFileName, outputFileName, programName);
+                continue;
             } 
             else if (activity.find("SYSCALL") != std::string::npos || activity.find("END_IO") != std::string::npos) {
                 event.name = activity.substr(0, activity.find_first_of(' '));
                 durationStream >> event.duration;
-                event.ID = std::stoi(activity.substr(activity.find_last_of(' ') + 1)); // Convert ID
+                event.ID = std::stoi(activity.substr(activity.find_last_of(' ') + 1));
             }
 
             eventHandler(event, vectorFileName);
@@ -298,8 +297,11 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
     }
 
     inputFile.close();
-    std::cout << "Finished processing CPU, SYSCALL, FORK, and EXEC events." << std::endl;
+    logSystemStatus(currentProgramName);
+
+    std::cout << "Finished processing CPU, SYSCALL, FORK, and EXEC events for " << currentProgramName << ".\n";
 }
+
 
 // function to convert the addresses to hex 
 std::string toHex(uint16_t value, int width) {
@@ -308,40 +310,6 @@ std::string toHex(uint16_t value, int width) {
     return ss.str();
 }
 
-void inputReadForkExec(std::string traceFileName, std::string vectorFileName) {
-    std::ifstream inputFile(traceFileName);
-
-    if (!inputFile) {
-        std::cerr << "Error when opening file: " << traceFileName << std::endl;
-        return;
-    }
-
-    std::string line;
-    while (std::getline(inputFile, line)) {
-        std::stringstream ss(line);
-        std::string command;
-        ss >> command;
-
-        if (command == "FORK") {
-            uint8_t parentPid = pcbTable.size() - 1; // last process in pcbTable is the parent
-            forkProcess(parentPid);
-            logSystemStatus();
-        } else if (command == "EXEC") {
-            std::string programName;
-            ss.ignore(1, ',');
-            ss >> programName;
-
-            // Ensure no whitespace in program name
-            programName.erase(std::remove_if(programName.begin(), programName.end(), ::isspace), programName.end());
-
-            uint8_t childPid = pcbTable.size() - 1; // last child added by fork
-            execProcess(childPid, programName, vectorFileName); 
-        }
-    }
-
-    inputFile.close();
-    std::cout << "Finished processing FORK and EXEC commands." << std::endl;
-}
 
 std::vector<uint16_t> vectorTableHandler(std::string fileName) {
     std::vector<uint16_t> isrAddresses;
@@ -379,8 +347,6 @@ int main() {
     // file for logs
     filename = outputFileName + ".txt"; 
     inputRead(traceFileName, vectorFileName, filename); 
-    // new function to handle FORK and EXEC
-    inputReadForkExec(traceFileName, vectorFileName); 
     std::cout << "Simulation completed. Check '" << outputFileName << ".txt' and 'system_status.txt' for details." << std::endl;
 
     return 0;

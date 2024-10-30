@@ -55,7 +55,7 @@ void logExecution(uint32_t duration, std::string eventName);
 
 void eventHandler(TraceEvent event, std::string fileName);
 
-void inputRead(std::string traceFileName, std::string vectorFileName, std::string outputFileName);
+void inputRead(std::string traceFileName, std::string vectorFileName, std::string outputFileName, std::string currentProgramName = "init");
 
 std::vector<uint16_t> vectorTableHandler(std::string fileName); 
 
@@ -72,6 +72,6 @@ void forkProcess(uint8_t parentPID);
 
 void execProcess(uint8_t childPid, std::string programName, std::string vectorFileName);
 
-void logSystemStatus(); 
+void logSystemStatus(const std::string &currentProgramName);
 
 #endif
