@@ -1,6 +1,6 @@
 /**
  * Main code for SYSC4001 A2
- * Authors: Aj Donald 101259149, Simon Hagos ()
+ * Authors: Aj Donald 101259149, Jayven Larsen (101260364)
  * October 23rd, 2024
  * 
  * Note: Due to the difficulties encountered during the assignment of the teams for A2, 
