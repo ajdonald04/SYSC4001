@@ -63,7 +63,7 @@ void loadExternalFiles(std::string fileName) {
 
 // function that generates the log for the system stats
 void logSystemStatus() {
-    std::ofstream outputFile("system_status.txt", std::ios::app);
+    std::ofstream outputFile("system_status_AjDonald_JayvenLarsen.txt", std::ios::app);
 
     if (outputFile.is_open()) {
         outputFile << "!-----------------------------------------------------------!\n";
@@ -343,8 +343,9 @@ void inputReadForkExec(std::string traceFileName, std::string vectorFileName) {
 
         if (command == "EXEC") {
             std::string programName;
-            ss.ignore(1, ','); // Ignore the comma
-            ss >> programName; // Read program name
+            ss.ignore(1, ','); 
+            // Read program name
+            ss >> programName; 
 
             programName.erase(std::remove_if(programName.begin(), programName.end(), ::isspace), programName.end());
 
@@ -352,11 +353,11 @@ void inputReadForkExec(std::string traceFileName, std::string vectorFileName) {
                 std::cerr << "Error parsing EXEC command: " << line << std::endl;
                 continue;
             }
-
-            uint8_t childPid = pcbTable.size(); // Use current size for new child PID
-            pcbTable.push_back(PCB{childPid, 0, 0, 0, 0, "Ready"}); // Initialize new child PCB
-
-            execProcess(childPid, programName, vectorFileName); // Execute the program
+            // Use current size for new child PID
+            uint8_t childPid = pcbTable.size(); 
+            pcbTable.push_back(PCB{childPid, 0, 0, 0, 0, "Ready"});
+            // Execute the program
+            execProcess(childPid, programName, vectorFileName); 
         }
     }
 
@@ -397,9 +398,11 @@ int main() {
 
     initMemory();
     loadExternalFiles(externalFilesName);
-    filename = outputFileName + ".txt"; // file for logging
+    // file for logs
+    filename = outputFileName + ".txt"; 
     inputRead(traceFileName, vectorFileName, filename); 
-    inputReadForkExec(traceFileName, vectorFileName); // new function to handle FORK and EXEC
+    // new function to handle FORK and EXEC
+    inputReadForkExec(traceFileName, vectorFileName); 
     std::cout << "Simulation completed. Check '" << outputFileName << ".txt' and 'system_status.txt' for details." << std::endl;
 
     return 0;
