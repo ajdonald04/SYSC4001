@@ -125,7 +125,6 @@ void forkProcess(uint8_t parentPid) {
 
 
 void execProcess(uint8_t childPid, std::string programName, std::string vectorFileName) {
-    // Ensure that EXEC is only called by a child process
     auto childIt = std::find_if(pcbTable.begin(), pcbTable.end(),
                                 [childPid](const PCB& pcb) {
                                     return pcb.pid == childPid;
@@ -135,12 +134,10 @@ void execProcess(uint8_t childPid, std::string programName, std::string vectorFi
         return;
     }
 
-    // Trim whitespace from program
+    // Trim whitespace from program name
     programName.erase(std::remove_if(programName.begin(), programName.end(), ::isspace), programName.end());
-    programName.erase(std::remove(programName.begin(), programName.end(), ','), programName.end()); // Remove trailing commas
+    programName.erase(std::remove(programName.begin(), programName.end(), ','), programName.end()); 
 
-
-    // Search for the program in the external files list
     auto programIt = std::find_if(externalFiles.begin(), externalFiles.end(),
                                   [&programName](const ExternalFile& file) {
                                       return file.program_name == programName;
@@ -151,37 +148,24 @@ void execProcess(uint8_t childPid, std::string programName, std::string vectorFi
     }
 
     uint8_t programSize = programIt->size;
-
     int partitionIndex = BestFitPartition(programSize);
     if (partitionIndex == -1) {
         std::cerr << "Error: No suitable partition found for program " << programName << ".\n";
         return;
     }
 
-    // Update mem partition and PCB
-    memoryPartitions[partitionIndex].code = programName; 
-    childIt->partition_num = memoryPartitions[partitionIndex].num; // Update partition num in PCB
-    childIt->state = "Running"; // process can be considered running now
+    // Assign program to memory partition and update PCB
+    memoryPartitions[partitionIndex].code = programName;
+    childIt->partition_num = memoryPartitions[partitionIndex].num;
+    childIt->state = "Running";
 
+    // Log the execution process and system status
     logExecution(1, "Switch to Kernel Mode");
-    logExecution(rand() % 3 + 1, "Save Context");
-    logExecution(1, "Find vector #3 in memory position 0x0006");
-    logExecution(1, "Load address 0X042B into the PC");
     logExecution(rand() % 10 + 2, "EXEC: load " + programName + " of size " + std::to_string(programSize) + "MB");
-    logExecution(rand() % 10 + 2, "Found partition " + std::to_string(memoryPartitions[partitionIndex].num) + 
-                 " with " + std::to_string(memoryPartitions[partitionIndex].size) + "MB of space");
-    logExecution(rand() % 10 + 2, "Partition " + std::to_string(memoryPartitions[partitionIndex].num) + 
-                 " marked as occupied");
-    logExecution(rand() % 10 + 2, "Updating PCB with new information");
-
-    // Log the system status after EXEC
     logSystemStatus();
 
-    // Read the program trace file
+    
     std::string programTraceFile = programName + ".txt";
-    std::cout << "Switching to program trace: " << programTraceFile << std::endl;
-
-    // Call the function to read events from the program's trace file
     inputRead(programTraceFile, vectorFileName, filename);
 }
 
@@ -265,14 +249,17 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
 
     std::string line;
 
-    // read line of the file and hten process the event from the trace
     while (std::getline(inputFile, line)) {
+        if (line.empty()) {
+            continue; // Skip empty lines
+        }
+
         TraceEvent event;
         std::stringstream ss(line);
         std::string activity;
         std::string durationOrID;
 
-        // get the event and duration or ID
+        // Parse event type and duration or ID
         if (std::getline(ss, activity, ',') && std::getline(ss, durationOrID, ',')) {
             std::stringstream durationStream(durationOrID);
 
@@ -283,32 +270,29 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
             } 
             else if (activity.find("FORK") != std::string::npos) {
                 event.name = "FORK";
-                try {
-                    event.ID = std::stoi(durationOrID);
-                } catch (const std::invalid_argument& e) {
-                    std::cerr << "Invalid argument for FORK: " << durationOrID << std::endl;
-                    continue; 
-                }
+                event.ID = pcbTable.back().pid; // Last process ID as parent for FORK
+                forkProcess(event.ID);
+                logSystemStatus();
             } 
             else if (activity.find("EXEC") != std::string::npos) {
                 event.name = "EXEC";
                 std::string programName = activity.substr(activity.find(' ') + 1);
-                event.ID = pcbTable.size(); // Use current size for new child PID
+                event.ID = pcbTable.size(); // Assign new child PID
+
+                // Run execProcess to switch to new trace file
                 execProcess(event.ID, programName, vectorFileName); 
-                continue;
+
+                // Swap to the new trace file (program.txt file) to execute the process.
+                std::string programTraceFile = programName + ".txt";
+                inputRead(programTraceFile, vectorFileName, outputFileName);
+                continue; 
             } 
             else if (activity.find("SYSCALL") != std::string::npos || activity.find("END_IO") != std::string::npos) {
-                event.name = activity.substr(0, activity.find_first_of(' '));  
-                try {
-                    event.ID = std::stoi(activity.substr(activity.find_last_of(' ') + 1));  
-                } catch (const std::invalid_argument& e) {
-                    std::cerr << "Invalid argument for SYSCALL/END_IO: " << durationOrID << std::endl;
-                    continue; 
-                }
+                event.name = activity.substr(0, activity.find_first_of(' '));
                 durationStream >> event.duration;
+                event.ID = std::stoi(activity.substr(activity.find_last_of(' ') + 1)); // Convert ID
             }
 
-            // eventHandler for the given event we're trying to process
             eventHandler(event, vectorFileName);
         } else {
             std::cerr << "Error parsing line: " << line << std::endl;
@@ -335,28 +319,24 @@ void inputReadForkExec(std::string traceFileName, std::string vectorFileName) {
     }
 
     std::string line;
-
     while (std::getline(inputFile, line)) {
         std::stringstream ss(line);
         std::string command;
         ss >> command;
 
-        if (command == "EXEC") {
+        if (command == "FORK") {
+            uint8_t parentPid = pcbTable.size() - 1; // last process in pcbTable is the parent
+            forkProcess(parentPid);
+            logSystemStatus();
+        } else if (command == "EXEC") {
             std::string programName;
-            ss.ignore(1, ','); 
-            // Read program name
-            ss >> programName; 
+            ss.ignore(1, ',');
+            ss >> programName;
 
+            // Ensure no whitespace in program name
             programName.erase(std::remove_if(programName.begin(), programName.end(), ::isspace), programName.end());
 
-            if (ss.fail()) {
-                std::cerr << "Error parsing EXEC command: " << line << std::endl;
-                continue;
-            }
-            // Use current size for new child PID
-            uint8_t childPid = pcbTable.size(); 
-            pcbTable.push_back(PCB{childPid, 0, 0, 0, 0, "Ready"});
-            // Execute the program
+            uint8_t childPid = pcbTable.size() - 1; // last child added by fork
             execProcess(childPid, programName, vectorFileName); 
         }
     }

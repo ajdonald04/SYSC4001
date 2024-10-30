@@ -1,1 +1,2 @@
-SYSCALL 4, 125
+FORK, 16 
+EXEC program3, 58
