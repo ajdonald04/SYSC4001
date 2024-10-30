@@ -1,3 +1,10 @@
+/*
+* SYSC4001 A2 Part2 
+*
+* Authors: Aj Donald 101259149 & Jayven Larsen 101260364
+*
+*/
+
 #include <iostream>
 using namespace std;
 #include <unistd.h>
