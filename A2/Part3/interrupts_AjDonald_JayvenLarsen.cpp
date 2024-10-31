@@ -113,10 +113,10 @@ void forkProcess(uint8_t parentPid) {
                                      return pcb.pid == parentPid;
                                  });
     if (parentIt != pcbTable.end()) {
-        PCB child = *parentIt; // Copy parent PCB
-        child.pid = pcbTable.size(); // Assign a new PID
-        child.state = "Ready"; // Set child's state to Ready
-        pcbTable.push_back(child); // Add child to PCB table
+        PCB child = *parentIt; 
+        child.pid = pcbTable.size(); 
+        child.state = "Ready"; 
+        pcbTable.push_back(child); 
 
     } else {
         std::cerr << "Error: Parent PID " << parentPid << " not found." << std::endl;
@@ -134,7 +134,7 @@ void execProcess(uint8_t childPid, std::string programName, std::string vectorFi
         return;
     }
 
-    // Trim whitespace from program name
+    // trim the whitespace from the program name
     programName.erase(std::remove_if(programName.begin(), programName.end(), ::isspace), programName.end());
     programName.erase(std::remove(programName.begin(), programName.end(), ','), programName.end()); 
 
@@ -154,12 +154,12 @@ void execProcess(uint8_t childPid, std::string programName, std::string vectorFi
         return;
     }
 
-    // Assign program to memory partition and update PCB
+    // asssign program to memory partition and update PCB
     memoryPartitions[partitionIndex].code = programName;
     childIt->partition_num = memoryPartitions[partitionIndex].num;
     childIt->state = "Running";
 
-    // Log the execution process and system status
+    // log the execution process and system status
     logExecution(1, "Switch to Kernel Mode");
     logExecution(rand() % 10 + 2, "EXEC: load " + programName + " of size " + std::to_string(programSize) + "MB");
     logSystemStatus();
@@ -194,19 +194,19 @@ void eventHandler(TraceEvent event, std::string fileName) {
     if (event.name == "CPU") {
         logExecution(event.duration, "CPU Execution");
     } else if (event.name == "FORK") {
-        uint8_t parentPid = event.ID; // Assuming ID is used as parent PID
+        uint8_t parentPid = event.ID; 
     
         logExecution(1, "Switch to Kernel Mode");
         logExecution(2, "Save Context");
-        logExecution(1, "Find vector #2 in memory position 0x0004"); // Assuming vector 2 for FORK
-        logExecution(1, "Load address 0X0695 into the PC"); // Example address for FORK
+        logExecution(1, "Find vector #2 in memory position 0x0004"); 
+        logExecution(1, "Load address 0X0695 into the PC"); 
         logExecution(4, "FORK: copy parent PCB to child PCB");
         logExecution(1, "Scheduler called"); 
         logExecution(1, "IRET");
 
-        // Log the system status after FORK
+        // Log the system status after a call to FORK
         logSystemStatus();
-        forkProcess(parentPid); // Process the fork
+        forkProcess(parentPid);
     }
 
     if (event.ID > 0 && event.ID <= vectorTableSize) {
@@ -270,19 +270,19 @@ void inputRead(std::string traceFileName, std::string vectorFileName, std::strin
             } 
             else if (activity.find("FORK") != std::string::npos) {
                 event.name = "FORK";
-                event.ID = pcbTable.back().pid; // Last process ID as parent for FORK
+                event.ID = pcbTable.back().pid; 
                 forkProcess(event.ID);
                 logSystemStatus();
             } 
             else if (activity.find("EXEC") != std::string::npos) {
                 event.name = "EXEC";
                 std::string programName = activity.substr(activity.find(' ') + 1);
-                event.ID = pcbTable.size(); // Assign new child PID
+                event.ID = pcbTable.size();
 
-                // Run execProcess to switch to new trace file
+                // Run execProcess to switch to new input file
                 execProcess(event.ID, programName, vectorFileName); 
 
-                // Swap to the new trace file (program.txt file) to execute the process.
+                // Swap to the new trace file (program.txt file) to execute the new process
                 std::string programTraceFile = programName + ".txt";
                 inputRead(programTraceFile, vectorFileName, outputFileName);
                 continue; 
