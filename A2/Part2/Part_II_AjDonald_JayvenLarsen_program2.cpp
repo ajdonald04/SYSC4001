@@ -18,6 +18,7 @@ struct sembuf sem_lock = {0, -1, 0}; // P: wait/decrement
 struct sembuf sem_unlock = {0, 1, 0}; // V: signal/increment
 
 int main() {
+    srand(time(0));
     
     // similarly to the other file, create a key before shared memory allocation occurs (shmget)
     key_t key = ftok("shmfile", 65); // same key as Process 1 
@@ -48,9 +49,11 @@ int main() {
     while (*shared_var != 0) {
         
         // lock the semaphore before using shared memory (similarly to parent process)
+        *shared_var = rand() % 11;
         semop(semid, &sem_lock, 1); 
         cout << "Process 2: Shared random number is: " << *shared_var << endl;
         sleep(1);
+        
 
         // unlock the semaphore after reading shared memory
         semop(semid, &sem_unlock, 1); 
