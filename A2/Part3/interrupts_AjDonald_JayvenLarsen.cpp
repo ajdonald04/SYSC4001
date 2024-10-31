@@ -331,7 +331,7 @@ void inputReadForkExec(std::string traceFileName, std::string vectorFileName) {
             ss.ignore(1, ',');
             ss >> programName;
 
-            // Ensure no whitespace in program name
+            // make sure there's no whitespace in program name
             programName.erase(std::remove_if(programName.begin(), programName.end(), ::isspace), programName.end());
 
             uint8_t childPid = pcbTable.size() - 1; // last child added by fork
@@ -376,9 +376,11 @@ int main() {
 
     initMemory();
     loadExternalFiles(externalFilesName);
+    
     // file for logs
     filename = outputFileName + ".txt"; 
     inputRead(traceFileName, vectorFileName, filename); 
+
     // new function to handle FORK and EXEC
     inputReadForkExec(traceFileName, vectorFileName); 
     std::cout << "Simulation completed. Check '" << outputFileName << ".txt' and 'system_status.txt' for details." << std::endl;
