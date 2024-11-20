@@ -26,8 +26,8 @@ vector<string> studentIds;
 vector<sem_t*> SemList;
 
 int main (void){
-
-    srand(time(0));
+    srand(time(nullptr));
+    
 
 
 
@@ -36,6 +36,7 @@ int main (void){
     char Ta1_name[] = "Sem1";
     Sem1 = sem_open(Ta1_name, O_CREAT);
     SemList.push_back(Sem1);
+
 
     sem_t* Sem2;
     char Sem2_name[] = "Sem2";
@@ -52,10 +53,10 @@ int main (void){
     Sem4 = sem_open(Sem4_name, O_CREAT);
     SemList.push_back(Sem4);
 
-    // sem_t* Sem5;
-    // char Sem5_name[] = "Sem5";
-    // Sem5 = sem_open(Ta1_name, O_CREAT);
-    // SemList.push_back(Sem5);
+    sem_t* Sem5;
+    char Sem5_name[] = "Sem5";
+    Sem5 = sem_open(Ta1_name, O_CREAT);
+    SemList.push_back(Sem5);
 
 
     
@@ -76,7 +77,7 @@ int main (void){
 
     //creating the ta processes
 
-    for (int i = 1; i < NUMTA+1; ++i){
+    for (int i = 1; i <= NUMTA; ++i){
         pid_t pid = fork();
         if (pid == 0){
             taMarking(i);
@@ -84,8 +85,12 @@ int main (void){
 
     }
 
-    for (int i = 0; i< NUMTA; i++){
+    for (int i = 0; i< NUMTA; ++i){
         wait(nullptr);
+    }
+
+    for (int i = 0; i < SEMNUM; ++i){
+        sem_close(SemList[i]);
     }
 
 
@@ -94,7 +99,9 @@ int main (void){
 
 
 void taMarking(int ta_id){
-    
+
+   
+    int count = 0;
 
     //create the output files for the TA's to write to
 
@@ -104,24 +111,32 @@ void taMarking(int ta_id){
         exit(1);
     }
 
-    for (int i = 0; i<3;){
+    while(count < 3){
 
         for(const string &student : studentIds){
-            if (student == "9999"){i++;} //if the student ID is 9999 then increment the for big for loop
+            if (student == "9999"){++count;} //if the student ID is 9999 then increment the for big for loop
+            
 
 
             // Lock the semaphores of taJ and taJ +1
             sem_wait(SemList[ta_id]);
-            sem_wait(SemList[ta_id+1]);
+            sem_wait(SemList[(ta_id+1)%5]);
 
             //access the database
-            cout<< "TA " << ta_id << "is accessing the databse for student " << student << endl;
-            delay();
+            cout<< "TA " << ta_id << " is accessing the databse for student " << student << endl;
+            
+            int delayNum = 1+ (rand() % 10);
+            //cout<< delayNum <<endl;
+            sleep(delayNum);
 
-            cout << "TA" << ta_id << "is marking student" << student << endl;
-            delay();
-            int markScore = mark();
-            ta_file << "Student" << student << ": " << markScore << "Points" << endl;
+            cout << "TA " << ta_id << " is marking student " << student << endl;
+            
+            delayNum = 1+ (rand() % 10);
+            sleep(delayNum);
+            int markValue = rand() % 10;
+            
+            
+            ta_file << "Student" << student << ": " << markValue << "Points" << endl;
 
 
         } 
@@ -130,25 +145,15 @@ void taMarking(int ta_id){
 
     ta_file.close();
 
-    cout<< "TA" << ta_id <<"Finished marking" << endl;
-
-
-
-
-}
-
-void delay(){
-    srand(time(0));
-    int delayNum = 1+ (rand() % 10);
-    sleep(delayNum);
     
+
+    return;
+
 }
 
-int mark(){
-    srand(time(0));
-    int markValue = rand() % 10;
-    return markValue;
-}
+
+
+
 
 
 
