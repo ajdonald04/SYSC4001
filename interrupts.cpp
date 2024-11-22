@@ -94,9 +94,10 @@ void deallocateMemory(Process &process) {
 void runScheduler(std::queue<Process> &readyQueue, std::ofstream &executionLog, std::ofstream &memoryLog) {
     std::vector<Process> waitingProcesses; // Processes waiting for I/O
     std::queue<Process> executionQueue;    // Processes ready to execute
+    int lastLoggedTime = -1;               // Tracks the last logged time
 
     while (!readyQueue.empty() || !waitingProcesses.empty() || !executionQueue.empty()) {
-        // Allocate memory for all processes arriving at the current time
+        // Step 1: Allocate memory for newly arrived processes
         while (!readyQueue.empty() && readyQueue.front().arrivalTime <= currentTime) {
             Process process = readyQueue.front();
             readyQueue.pop();
@@ -104,81 +105,80 @@ void runScheduler(std::queue<Process> &readyQueue, std::ofstream &executionLog, 
             // Try to allocate memory
             int partitionIndex = allocateMemory(process);
             if (partitionIndex != -1) {
-                // Memory allocated, log allocation
-                logMemoryStatus(memoryLog, memoryPartitions);
-
-                // Transition process to READY state and log
-                logExecutionStatus(executionLog, process.pid, "NEW", "READY");
-
-                // Add process to the execution queue
-                executionQueue.push(process);
+                logMemoryStatus(memoryLog, memoryPartitions); // Log memory allocation
+                logExecutionStatus(executionLog, process.pid, "NEW", "READY"); // Log state transition
+                executionQueue.push(process); // Add process to execution queue
             } else {
-                // Memory not available, requeue process for later
-                waitingProcesses.push_back(process);
+                // Requeue for memory allocation later
+                readyQueue.push(process);
+                break; // Exit allocation loop if no memory is available
             }
         }
 
-        // Handle processes ready for execution
+        // Step 2: Handle execution (CPU utilization)
         if (!executionQueue.empty()) {
             Process process = executionQueue.front();
             executionQueue.pop();
 
-            // Log transition to RUNNING
-            logExecutionStatus(executionLog, process.pid, "READY", "RUNNING");
+            // Log `READY -> RUNNING` only if the process just started running
+            if (process.state != 1 /* RUNNING */) {
+                logExecutionStatus(executionLog, process.pid, "READY", "RUNNING");
+                process.state = 1; // Update state to RUNNING
+            }
 
-            unsigned int timeSinceLastIO = process.totalCPUTime - process.remainingCPUTime;
-
-            // Simulate execution for one unit of time
             process.remainingCPUTime--;
             currentTime++;
 
-            // Check if I/O is required
-            if (process.ioFrequency > 0 && timeSinceLastIO % process.ioFrequency == 0 && process.remainingCPUTime > 0) {
+            // Handle I/O
+            if (process.ioFrequency > 0 && 
+                (process.totalCPUTime - process.remainingCPUTime) % process.ioFrequency == 0 &&
+                process.remainingCPUTime > 0) {
                 logExecutionStatus(executionLog, process.pid, "RUNNING", "WAITING");
-
-                // Simulate I/O and add the process to the waiting list
-                process.ioDuration = process.ioDuration; // Reset I/O duration
-                waitingProcesses.push_back(process);
+                process.state = 2; // Update state to WAITING
+                waitingProcesses.push_back(process); // Move to waiting list
             } else if (process.remainingCPUTime > 0) {
-                // Add the process back to the execution queue if it's not finished
-                executionQueue.push(process);
+                executionQueue.push(process); // Add back to execution queue
             } else {
-                // Process is completed
                 logExecutionStatus(executionLog, process.pid, "RUNNING", "TERMINATED");
-
-                // Deallocate memory and log memory state
-                deallocateMemory(process);
-                logMemoryStatus(memoryLog, memoryPartitions);
+                deallocateMemory(process); // Free memory
+                logMemoryStatus(memoryLog, memoryPartitions); // Log memory deallocation
             }
         }
 
-        // Process the I/O waiting list
+        // Step 3: Handle waiting processes (I/O completion)
         for (auto it = waitingProcesses.begin(); it != waitingProcesses.end();) {
             Process &waitingProcess = *it;
-
-            // Decrement I/O duration
             waitingProcess.ioDuration--;
 
             if (waitingProcess.ioDuration <= 0) {
-                // Transition process back to READY state
-                logExecutionStatus(executionLog, waitingProcess.pid, "WAITING", "READY");
-
-                // Add process back to the execution queue
-                executionQueue.push(waitingProcess);
-
-                // Remove process from the waiting list
-                it = waitingProcesses.erase(it);
+                // Log `WAITING -> READY` only when I/O is completed
+                if (waitingProcess.state != 3 /* READY */) {
+                    logExecutionStatus(executionLog, waitingProcess.pid, "WAITING", "READY");
+                    waitingProcess.state = 3; // Update state to READY
+                }
+                executionQueue.push(waitingProcess); // Move back to execution queue
+                it = waitingProcesses.erase(it); // Remove from waiting list
             } else {
                 ++it;
             }
         }
 
-        // Advance time if no processes are ready or running
+        // Step 4: Advance time if necessary
         if (executionQueue.empty() && waitingProcesses.empty() && !readyQueue.empty()) {
-            currentTime = std::max(currentTime, readyQueue.front().arrivalTime);
+            int nextArrivalTime = readyQueue.front().arrivalTime;
+            if (currentTime < nextArrivalTime) {
+                currentTime = nextArrivalTime;
+                // Log time jump (if needed)
+                if (currentTime != lastLoggedTime) {
+                    lastLoggedTime = currentTime;
+                }
+            }
         }
     }
 }
+
+
+
 
 
 
