@@ -30,7 +30,8 @@ struct sharedData{
 };
 
 void load_students();
-
+bool sem_aquire_check(int ta);
+void sem_release(int ta);
 void init_semaphores();
 void cleanup_semaphore();
 int get_next_student();
