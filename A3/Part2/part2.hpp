@@ -3,6 +3,8 @@
 
 #define NUM_TAS 5
 #define SEMNUM 5
+#define NUMSTUDENTS 2
+
 
 
 #include <iostream>
@@ -15,14 +17,23 @@
 #include <ctime>
 #include <unistd.h>
 #include <fcntl.h>
-
+#include <sys/mman.h>
 using namespace std;
 
-// void delay();
-// int mark();
+
+
+
+struct sharedData{
+
+    int students[NUMSTUDENTS];
+    sem_t semaphore;
+};
+
+void load_students();
+
 void init_semaphores();
-void cleanup_semaphores();
-int get_next_student(ifstream& file);
+void cleanup_semaphore();
+int get_next_student();
 void ta_process(int ta_id);
 
 #endif
