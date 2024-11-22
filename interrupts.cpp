@@ -179,7 +179,10 @@ void runScheduler(std::queue<Process> &readyQueue, std::ofstream &executionLog, 
 #include <limits> // For std::numeric_limits
 void runPriorityScheduler(std::queue<Process> &readyQueue, std::ofstream &executionLog, std::ofstream &memoryLog) {
     std::vector<std::pair<Process, int>> waitingProcesses; // Pair: Process + I/O End Time
-    std::priority_queue<Process, std::vector<Process>, PriorityComparator> executionQueue; // Priority queue for scheduling
+    auto compare = [](const Process &a, const Process &b) {
+        return (a.priority > b.priority) || (a.priority == b.priority && a.arrivalTime > b.arrivalTime);
+    };
+    std::priority_queue<Process, std::vector<Process>, decltype(compare)> executionQueue(compare); // Priority queue
 
     while (!readyQueue.empty() || !waitingProcesses.empty() || !executionQueue.empty()) {
         // Step 1: Allocate memory for newly arrived processes
