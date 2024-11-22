@@ -1,8 +1,9 @@
 #ifndef PART2_HPP
 #define PART2_HPP
 
-#define NUMTA 5
+#define NUM_TAS 5
 #define SEMNUM 5
+
 
 #include <iostream>
 #include <semaphore.h>
@@ -13,11 +14,15 @@
 #include <cstdlib>
 #include <ctime>
 #include <unistd.h>
+#include <fcntl.h>
+
 using namespace std;
 
 // void delay();
 // int mark();
-int delayAndMark();
-void taMarking(int ta_id);
+void init_semaphores();
+void cleanup_semaphores();
+int get_next_student(ifstream& file);
+void ta_process(int ta_id);
 
 #endif

@@ -1,159 +1,121 @@
-//Ta's have two tasks
-//  1) pick a student from db
-//  2)save the mark for that sutdent in an individual file 
-// Each TA has their own file
-
 #include "part2.hpp"
 
+// Global semaphore array
+sem_t* semaphores[NUM_TAS];
+vector<int> studentIds; // for later
 
-
-
-//2 a)
-// 5 semaphore, 1 for each TA
-// TA accesses db
-// picks up the next number & saves to local var
-// 1-4 second delay (random num)
-//releases semaphore
-
-//once TA has student number, assign random num 1-10 for mark
-// once 9999 reached, loops through again, for 3 times
-
-
-//sem_post() is the unlock of a semaphore
-//sem_wait locks the semaphore
-
-vector<string> studentIds;
-vector<sem_t*> SemList;
-
-int main (void){
-    srand(time(nullptr));
-    
-
-
-
-    //Create the TA semaphores
-    sem_t* Sem1;
-    char Ta1_name[] = "Sem1";
-    Sem1 = sem_open(Ta1_name, O_CREAT);
-    SemList.push_back(Sem1);
-
-
-    sem_t* Sem2;
-    char Sem2_name[] = "Sem2";
-    Sem2 = sem_open(Sem2_name, O_CREAT);
-    SemList.push_back(Sem2);
-
-    sem_t* Sem3;
-    char Sem3_name[] = "Sem3";
-    Sem3 = sem_open(Sem3_name, O_CREAT);
-    SemList.push_back(Sem3);
-
-    sem_t* Sem4;
-    char Sem4_name[] = "Sem4";
-    Sem4 = sem_open(Sem4_name, O_CREAT);
-    SemList.push_back(Sem4);
-
-    sem_t* Sem5;
-    char Sem5_name[] = "Sem5";
-    Sem5 = sem_open(Ta1_name, O_CREAT);
-    SemList.push_back(Sem5);
-
-
-    
-
-    ifstream file("database.txt");
-
-    if (!file.is_open()) {
-        cerr << "Error opening the file!";
-        return 1;
-    }
-
-    // String variable to store the student ID
-    string student_ID;
-    while (getline(file, student_ID)){
-        studentIds.push_back(student_ID);
-    }   
-    file.close();
-
-    //creating the ta processes
-
-    for (int i = 1; i <= NUMTA; ++i){
-        pid_t pid = fork();
-        if (pid == 0){
-            taMarking(i);
+// Function to initialize semaphores
+void init_semaphores() {
+    char sem_name[20];
+    for (int i = 0; i < NUM_TAS; i++) {
+        snprintf(sem_name, sizeof(sem_name), "/ta_sem_%d", i);
+        semaphores[i] = sem_open(sem_name, O_CREAT, 0644, 1);
+        if (semaphores[i] == SEM_FAILED) {
+            perror("sem_open");
+            exit(1);
         }
-
     }
-
-    for (int i = 0; i< NUMTA; ++i){
-        wait(nullptr);
-    }
-
-    for (int i = 0; i < SEMNUM; ++i){
-        sem_close(SemList[i]);
-    }
-
-
-    return 0;
 }
 
+// Function to clean up semaphores
+void cleanup_semaphores() {
+    char sem_name[20];
+    for (int i = 0; i < NUM_TAS; i++) {
+        sem_close(semaphores[i]);
+        snprintf(sem_name, sizeof(sem_name), "/ta_sem_%d", i);
+        sem_unlink(sem_name);
+    }
+}
 
-void taMarking(int ta_id){
+// Function to get the next student number from the file
+int get_next_student(ifstream& file) {
+    int student_num;
+    if (!(file >> student_num)) {
+        file.clear();
+        file.seekg(0, ios::beg);
+        file >> student_num;
+    }
+    return student_num;
+}
 
-   
-    int count = 0;
+// This function is the whole ta marking process
+void ta_process(int ta_id) {
+    string filename = "TA" + to_string(ta_id) + ".txt";
+    ofstream ta_file(filename);
+    ifstream student_list("database.txt");
 
-    //create the output files for the TA's to write to
-
-    ofstream ta_file("TA"+ to_string(ta_id)+ ".txt");
-    if (!ta_file.is_open()){
-        cerr << "Error openning file" << ta_id << endl;
+    if (!ta_file.is_open() || !student_list.is_open()) {
+        cerr << "File opening failed" << endl;
         exit(1);
     }
 
-    while(count < 3){
+    srand(time(NULL) + ta_id);
 
-        for(const string &student : studentIds){
-            if (student == "9999"){++count;} //if the student ID is 9999 then increment the for big for loop
+    for (int i = 0; i<3; ++i){ // itterate over the database 3 times
+
+        while (true) {
+            // Lock semaphores of TAj and TA j+1
+            sem_wait(semaphores[ta_id - 1]);
+            sem_wait(semaphores[ta_id % NUM_TAS]);
+
+            cout << "TA " << ta_id << " accessing database" << endl;
+
+            // Access database
+            int student = get_next_student(student_list);
             
 
+            // Access Database random time
+            sleep(rand() % 4 + 1);
 
-            // Lock the semaphores of taJ and taJ +1
-            sem_wait(SemList[ta_id]);
-            sem_wait(SemList[(ta_id+1)%5]);
+            // Unlock semaphores post accessing database
+            sem_post(semaphores[ta_id - 1]);
+            sem_post(semaphores[ta_id % NUM_TAS]);
 
-            //access the database
-            cout<< "TA " << ta_id << " is accessing the databse for student " << student << endl;
+            cout << "TA " << ta_id << " marking student " << student << endl;
+
+            // Marking process
+            int mark = rand() % 11;
+            ta_file << "Student " << student << ": " << mark << endl;
             
-            int delayNum = 1+ (rand() % 10);
-            //cout<< delayNum <<endl;
-            sleep(delayNum);
+            // Flush the output to ensure it's written immediately
+            //ta_file.flush();
 
-            cout << "TA " << ta_id << " is marking student " << student << endl;
-            
-            delayNum = 1+ (rand() % 10);
-            sleep(delayNum);
-            int markValue = rand() % 10;
-            
-            
-            ta_file << "Student" << student << ": " << markValue << "Points" << endl;
+            // Simulate marking time
+            sleep(rand() % 10 + 1);
 
-
-        } 
-
+            if (student == 9999) break;
+        }
     }
 
     ta_file.close();
-
-    
-
-    return;
-
+    student_list.close();
 }
 
+int main() {
+    init_semaphores();
 
+    // Create TA processes
+    pid_t pids[NUM_TAS];
+    
+    for (int i = 0; i < NUM_TAS; i++) {
+        pids[i] = fork();
+        
+        if (pids[i] == 0) { // Child process
+            ta_process(i+1);
+            exit(0);
+        } else if (pids[i] < 0) { // Fork failed
+            perror("fork");
+            exit(1);
+        }
+    }
 
+    // Wait for all TA processes to finish
+    for (int i = 0; i < NUM_TAS; i++) {
+        waitpid(pids[i], NULL, 0);
+    }
 
+    // Cleanup semaphores
+    cleanup_semaphores();
 
-
-
+    return 0;
+}
