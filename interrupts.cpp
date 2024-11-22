@@ -92,56 +92,73 @@ void deallocateMemory(Process &process) {
 }
 
 void runScheduler(std::queue<Process> &readyQueue, std::ofstream &executionLog, std::ofstream &memoryLog) {
-    while (!readyQueue.empty()) {
-        Process process = readyQueue.front();
-        readyQueue.pop();
+    std::vector<Process> waitingProcesses; // Processes waiting for memory or I/O
 
-        // Allocate memory for the process
-        int partitionIndex = allocateMemory(process);
-        if (partitionIndex == -1) {
-            // If no memory is available, requeue the process and continue
-            readyQueue.push(process);
-            currentTime++;
-            continue;
+    while (!readyQueue.empty() || !waitingProcesses.empty()) {
+        // Allocate memory for all processes arriving at the current time
+        while (!readyQueue.empty() && readyQueue.front().arrivalTime <= currentTime) {
+            Process process = readyQueue.front();
+            readyQueue.pop();
+
+            // Try to allocate memory
+            int partitionIndex = allocateMemory(process);
+            if (partitionIndex != -1) {
+                // Memory allocated, log allocation
+                logMemoryStatus(memoryLog, memoryPartitions);
+
+                // Transition process to READY state and log
+                logExecutionStatus(executionLog, process.pid, "NEW", "READY");
+
+                // Add process to the execution-ready list
+                waitingProcesses.push_back(process);
+            } else {
+                // Memory not available, requeue process for later
+                waitingProcesses.push_back(process);
+            }
         }
 
-        // Log memory allocation immediately
-        logMemoryStatus(memoryLog, memoryPartitions);
+        // Handle processes ready for execution
+        if (!waitingProcesses.empty()) {
+            Process &process = waitingProcesses.front();
 
-        // Log initial state transitions
-        logExecutionStatus(executionLog, process.pid, "NEW", "READY");
-        logExecutionStatus(executionLog, process.pid, "READY", "RUNNING");
+            // Start execution if process is READY
+            logExecutionStatus(executionLog, process.pid, "READY", "RUNNING");
 
-        // Simulate execution
-        unsigned int timeSinceLastIO = 0; // Tracks time since last I/O interruption
-        while (process.remainingCPUTime > 0) {
-            // Check if it's time for an I/O interruption
-            if (timeSinceLastIO == process.ioFrequency) {
-                logExecutionStatus(executionLog, process.pid, "RUNNING", "WAITING");
+            unsigned int timeSinceLastIO = 0;
+            while (process.remainingCPUTime > 0) {
+                timeSinceLastIO++;
 
-                // Simulate I/O duration
-                currentTime += process.ioDuration;
+                // Handle I/O interruptions
+                if (timeSinceLastIO == process.ioFrequency && process.remainingCPUTime > 0) {
+                    logExecutionStatus(executionLog, process.pid, "RUNNING", "WAITING");
 
-                logExecutionStatus(executionLog, process.pid, "WAITING", "RUNNING");
+                    // Simulate I/O duration
+                    currentTime += process.ioDuration;
 
-                // Reset the I/O timer
-                timeSinceLastIO = 0;
+                    logExecutionStatus(executionLog, process.pid, "WAITING", "RUNNING");
+
+                    // Reset I/O timer
+                    timeSinceLastIO = 0;
+                }
+
+                // Execute one time unit
+                process.remainingCPUTime--;
+                currentTime++;
             }
 
-            // Increment timer after processing
-            timeSinceLastIO++;
+            // Transition to TERMINATED
+            logExecutionStatus(executionLog, process.pid, "RUNNING", "TERMINATED");
 
-            // Execute one time unit
-            process.remainingCPUTime--;
-            currentTime++;
+            // Deallocate memory
+            deallocateMemory(process);
+            logMemoryStatus(memoryLog, memoryPartitions);
+
+            // Remove process from the list
+            waitingProcesses.erase(waitingProcesses.begin());
+        } else if (!readyQueue.empty()) {
+            // Advance time to the next process arrival if no processes are running
+            currentTime = std::max(currentTime, readyQueue.front().arrivalTime);
         }
-
-        // Transition to TERMINATED
-        logExecutionStatus(executionLog, process.pid, "RUNNING", "TERMINATED");
-
-        // Deallocate memory and log final memory state
-        deallocateMemory(process);
-        logMemoryStatus(memoryLog, memoryPartitions);
     }
 }
 
