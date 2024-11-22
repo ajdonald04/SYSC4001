@@ -32,8 +32,16 @@ struct Process {
     uint16_t ioDuration; 
     uint16_t remainingCPUTime; 
     uint8_t state; // 0 = new, 1 = ready, 2 = running, 3 = waiting, 4 = terminated
-    uint8_t memoryPartition; 
+    int8_t memoryPartition; 
+    uint8_t priority; 
 
 };
 
+
+struct PriorityComparator {
+    bool operator()(const Process &a, const Process &b) const {
+        return (a.priority > b.priority) || 
+               (a.priority == b.priority && a.arrivalTime > b.arrivalTime);
+    }
+};
 void logMemoryStatus(std::ofstream &memoryLog, const std::vector<MemoryPartition> &partitions);
