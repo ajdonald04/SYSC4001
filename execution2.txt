@@ -1,0 +1,42 @@
++------------------------------------------------+
+| Time of Transition | PID | Old State | New State |
++------------------------------------------------+
+|                  0 |  15 |        NEW |     READY |
+|                  0 |  15 |      READY |   RUNNING |
+|                 11 |  15 |    RUNNING |   WAITING |
+|                 14 |  15 |    WAITING |   RUNNING |
+|                 25 |  15 |    RUNNING |   WAITING |
+|                 28 |  15 |    WAITING |   RUNNING |
+|                 31 |  15 |    RUNNING | TERMINATED |
+|                 31 |  12 |        NEW |     READY |
+|                 31 |  12 |      READY |   RUNNING |
+|                 41 |  12 |    RUNNING |   WAITING |
+|                 46 |  12 |    WAITING |   RUNNING |
+|                 56 |  12 |    RUNNING |   WAITING |
+|                 61 |  12 |    WAITING |   RUNNING |
+|                 71 |  12 |    RUNNING |   WAITING |
+|                 76 |  12 |    WAITING |   RUNNING |
+|                 86 |  12 |    RUNNING |   WAITING |
+|                 91 |  12 |    WAITING |   RUNNING |
+|                101 |  12 |    RUNNING | TERMINATED |
+|                101 |   1 |        NEW |     READY |
+|                101 |   1 |      READY |   RUNNING |
+|                126 |   1 |    RUNNING |   WAITING |
+|                151 |   1 |    WAITING |   RUNNING |
+|                176 |   1 |    RUNNING |   WAITING |
+|                201 |   1 |    WAITING |   RUNNING |
+|                226 |   1 |    RUNNING |   WAITING |
+|                251 |   1 |    WAITING |   RUNNING |
+|                276 |   1 |    RUNNING | TERMINATED |
+|                276 |   2 |        NEW |     READY |
+|                276 |   2 |      READY |   RUNNING |
+|                286 |   2 |    RUNNING |   WAITING |
+|                288 |   2 |    WAITING |   RUNNING |
+|                298 |   2 |    RUNNING | TERMINATED |
+|                298 |   3 |        NEW |     READY |
+|                298 |   3 |      READY |   RUNNING |
+|                300 |   3 |    RUNNING |   WAITING |
+|                310 |   3 |    WAITING |   RUNNING |
+|                312 |   3 |    RUNNING |   WAITING |
+|                322 |   3 |    WAITING |   RUNNING |
+|                323 |   3 |    RUNNING | TERMINATED |
