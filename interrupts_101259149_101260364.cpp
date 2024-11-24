@@ -405,23 +405,21 @@ std::queue<Process> readInputData(const std::string &filename) {
 }
 
 int main(int argc, char *argv[]) {
-    if (argc < 3) {
-        std::cerr << "Usage: " << argv[0] << " <input_file> <scheduler> [output_prefix]\n";
+    if (argc < 4) {  // Updated to require 4 arguments
+        std::cerr << "Usage: " << argv[0] << " <input_file> <scheduler> <execution_log> <memory_log>\n";
         return 1;
     }
 
     std::string inputFile = argv[1];      // First argument: input file
     std::string scheduler = argv[2];     // Second argument: scheduler type
-    std::string outputPrefix = (argc > 3) ? argv[3] : "execution_" + scheduler; // Optional third argument
-
-    std::string executionFile = outputPrefix + ".txt";
-    std::string memoryFile = "memory_status_" + scheduler + ".txt";
+    std::string executionFile = argv[3]; // Third argument: execution log
+    std::string memoryFile = argv[4];    // Fourth argument: memory log
 
     // Open output files
     std::ofstream executionLog(executionFile);
     std::ofstream memoryLog(memoryFile);
 
-    if (!executionLog.is_open() || !memoryLog.is_open()) {
+    if (!executionLog || !memoryLog) {
         std::cerr << "Error opening output files." << std::endl;
         return 1;
     }
@@ -434,11 +432,11 @@ int main(int argc, char *argv[]) {
 
     // Run the appropriate scheduler
     if (scheduler == "FCFS") {
-        runScheduler(processes, executionLog, memoryLog);  // First-Come, First-Served
+        runScheduler(processes, executionLog, memoryLog);
     } else if (scheduler == "EP") {
-        runPriorityScheduler(processes, executionLog, memoryLog);  // External Priority
+        runPriorityScheduler(processes, executionLog, memoryLog);
     } else if (scheduler == "RR") {
-        runRoundRobinScheduler(processes, executionLog, memoryLog);  // Round Robin
+        runRoundRobinScheduler(processes, executionLog, memoryLog);
     } else {
         std::cerr << "Invalid scheduler type. Use 'FCFS', 'EP', or 'RR'." << std::endl;
         return 1;
@@ -450,3 +448,51 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+
+
+// int main(int argc, char *argv[]) {
+//     if (argc < 3) {
+//         std::cerr << "Usage: " << argv[0] << " <input_file> <scheduler> [output_prefix]\n";
+//         return 1;
+//     }
+
+//     std::string inputFile = argv[1];      // First argument: input file
+//     std::string scheduler = argv[2];     // Second argument: scheduler type
+//     std::string outputPrefix = (argc > 3) ? argv[3] : "execution_" + scheduler; // Optional third argument
+
+//     std::string executionFile = outputPrefix + ".txt";
+//     std::string memoryFile = "memory_status_" + scheduler + ".txt";
+
+//     // Open output files
+//     std::ofstream executionLog(executionFile);
+//     std::ofstream memoryLog(memoryFile);
+
+//     if (!executionLog.is_open() || !memoryLog.is_open()) {
+//         std::cerr << "Error opening output files." << std::endl;
+//         return 1;
+//     }
+
+//     // Read input data
+//     std::queue<Process> processes = readInputData(inputFile);
+
+//     // Log the initial state of memory
+//     logMemoryStatus(memoryLog, memoryPartitions);
+
+//     // Run the appropriate scheduler
+//     if (scheduler == "FCFS") {
+//         runScheduler(processes, executionLog, memoryLog);  // First-Come, First-Served
+//     } else if (scheduler == "EP") {
+//         runPriorityScheduler(processes, executionLog, memoryLog);  // External Priority
+//     } else if (scheduler == "RR") {
+//         runRoundRobinScheduler(processes, executionLog, memoryLog);  // Round Robin
+//     } else {
+//         std::cerr << "Invalid scheduler type. Use 'FCFS', 'EP', or 'RR'." << std::endl;
+//         return 1;
+//     }
+
+//     // Close log files
+//     executionLog.close();
+//     memoryLog.close();
+
+//     return 0;
+// }
