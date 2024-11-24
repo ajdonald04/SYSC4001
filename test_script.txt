@@ -1,0 +1,16 @@
+#!/bin/bash
+# Test Script to Compile and Run Scheduler Simulations
+
+# Compile the program
+g++ interrupts_<student#1>_<student#2>.cpp -o sim
+
+# Run simulations for different input files and schedulers
+./sim input_data_1.txt FCFS > execution_FCFS_1.txt
+./sim input_data_1.txt EP > execution_EP_1.txt
+./sim input_data_1.txt RR > execution_RR_1.txt
+
+./sim input_data_2.txt FCFS > execution_FCFS_2.txt
+./sim input_data_2.txt EP > execution_EP_2.txt
+./sim input_data_2.txt RR > execution_RR_2.txt
+
+# Add more tests as needed
