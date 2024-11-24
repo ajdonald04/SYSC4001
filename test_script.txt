@@ -1,16 +1,24 @@
 #!/bin/bash
-# Test Script to Compile and Run Scheduler Simulations
 
-# Compile the program
-g++ interrupts_<student#1>_<student#2>.cpp -o sim
+# Compilation step
+g++ -std=c++11 interrupts_101259149_101260364.cpp -o sim.o
 
-# Run simulations for different input files and schedulers
-./sim input_data_1.txt FCFS > execution_FCFS_1.txt
-./sim input_data_1.txt EP > execution_EP_1.txt
-./sim input_data_1.txt RR > execution_RR_1.txt
+# Run tests for all schedulers
+# Test Case 1 - FCFS Scheduler
+./sim.o input_data_1.txt FCFS execution_FCFS_1
 
-./sim input_data_2.txt FCFS > execution_FCFS_2.txt
-./sim input_data_2.txt EP > execution_EP_2.txt
-./sim input_data_2.txt RR > execution_RR_2.txt
+# Test Case 2 - External Priority Scheduler
+./sim.o input_data_1.txt EP execution_EP_1
 
-# Add more tests as needed
+# Test Case 3 - Round Robin Scheduler
+./sim.o input_data_1.txt RR execution_RR_1
+
+# Test Case 4 - Another test case with Round Robin Scheduler and a different input
+./sim.o input_data_2.txt RR execution_RR_2
+
+# Verify output files are created
+if [ -f execution_FCFS_1.txt ] && [ -f execution_EP_1.txt ] && [ -f execution_RR_1.txt ] && [ -f execution_RR_2.txt ]; then
+    echo "All test cases executed successfully and output files are generated."
+else
+    echo "Some output files are missing. Please check your program."
+fi
