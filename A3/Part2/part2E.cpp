@@ -1,12 +1,13 @@
 #include "part2.hpp"
 
 // Global semaphore array
+sem_t *semaphores[5];
 
-
+// These are used to open the semaphores with according names. (Was not working with sem_init)
 const char *SEMAPHORE_NAMES[5] = {"/sem1", "/sem2", "/sem3", "/sem4", "/sem5"};
 
 struct sharedData *shared_data; // Our shared data strucute which will be shared through processes
-sem_t *semaphores[5];
+
 
 // Function to initialize semaphores
 void init_semaphores() {
@@ -20,17 +21,16 @@ void init_semaphores() {
 void cleanup_semaphore() {
     for (int i = 0; i < 5; i++) {
         sem_close(semaphores[i]);
-        sem_unlink("/shared_sem"); // Destroy each semaphore
     }
     
 }
 
 // Function to get the next student number from the file
 int get_next_student() {
-    static int current_index = 0;
+    static int index = 0;
 
-    int student_num = shared_data->students[current_index];
-    current_index = (current_index + 1) % NUMSTUDENTS;
+    int student_num = shared_data->students[index];
+    index = (index + 1) % NUMSTUDENTS;
 
     return student_num;
 
@@ -128,11 +128,7 @@ int main() {
         perror("shm_open");
         exit(1);
     }
-
-    // if (ftruncate(shm_fd, sizeof(sharedData)) == -1) {
-    //     perror("ftruncate");
-    //     exit(1);
-    // }
+    //Truncate fucntions used for the following shared data mapping
     ftruncate(shm_fd, sizeof(sharedData));
 
     shared_data =static_cast<sharedData*>(mmap(NULL, sizeof(sharedData), PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0));
