@@ -91,8 +91,8 @@ void deallocateMemory(Process &process) {
 }
 // FCFS scheduler 
 void runScheduler(std::queue<Process> &readyQueue, std::ofstream &executionLog, std::ofstream &memoryLog) {
-    std::vector<std::pair<Process, int>> waitingProcesses; // Pair: Process + I/O End Time
-    std::queue<Process> executionQueue;                   // Processes ready to execute
+    std::vector<std::pair<Process, int>> waitingProcesses; // a pair created for process + end IO time. 
+    std::queue<Process> executionQueue;
 
     while (!readyQueue.empty() || !waitingProcesses.empty() || !executionQueue.empty()) {
         // allocate memory for newly arrived processes
@@ -240,13 +240,12 @@ void runPriorityScheduler(std::queue<Process> &readyQueue, std::ofstream &execut
             currentTime = static_cast<uint16_t>(std::max(static_cast<int>(currentTime), static_cast<int>(readyQueue.front().arrivalTime)));
         }
 
-        // Step 3: Handle waiting processes (I/O completion)
         for (auto it = waitingProcesses.begin(); it != waitingProcesses.end();) {
             auto &waitingProcess = it->first;
             int ioEndTime = it->second;
 
             if (currentTime >= ioEndTime) {
-                // I/O completed transition back to READY state
+                // I/O completed transition to READY State 
                 if (waitingProcess.state != 3 /* READY */) {
                     logExecutionStatus(executionLog, waitingProcess.pid, "WAITING", "READY");
                     waitingProcess.state = 3; // udpate state to READY
