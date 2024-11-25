@@ -3,7 +3,7 @@
 
 #define NUM_TAS 5
 #define SEMNUM 5
-#define NUMSTUDENTS 2
+#define NUMSTUDENTS 20
 
 
 
@@ -26,7 +26,6 @@ using namespace std;
 struct sharedData{
 
     int students[NUMSTUDENTS];
-    sem_t semaphore;
 };
 
 void load_students();
