@@ -55,7 +55,8 @@ def analyze_execution_log(filename):
 
                         # Accumulate CPU time
                         if state == "RUNNING":
-                            process_info[pid]["total_cpu_time"] += time - process_info[pid]["last_run_time"]
+                            if process_info[pid]["last_run_time"] > 0:
+                                process_info[pid]["total_cpu_time"] += time - process_info[pid]["last_run_time"]
                             total_execution_time += 1
                             process_info[pid]["last_run_time"] = time
 
@@ -73,17 +74,18 @@ def analyze_execution_log(filename):
 
         # Compute metrics
         for pid, info in process_info.items():
-            if info["completion"] is not None:
+            if info["arrival"] is not None and info["completion"] is not None:
                 turnaround_time = info["completion"] - info["arrival"]
                 turnaround_times.append(turnaround_time)
                 metrics["throughput"] += 1
 
                 if info["first_run"] is not None:
                     response_time = info["first_run"] - info["arrival"]
-                    response_times.append(response_time)
+                    response_times.append(max(response_time, 0))  # Ensure non-negative response time
 
-                wait_time = turnaround_time - info["total_cpu_time"]
-                wait_times.append(wait_time)
+                if info["total_cpu_time"] is not None:
+                    wait_time = turnaround_time - info["total_cpu_time"]
+                    wait_times.append(max(wait_time, 0))  # Ensure non-negative waiting time
 
         # Calculate averages
         metrics["average_turnaround_time"] = round(float(np.mean(turnaround_times)), 2) if turnaround_times else 0
@@ -102,11 +104,10 @@ def analyze_execution_log(filename):
     return metrics
 
 
-# Example Usage
 if __name__ == "__main__":
-    fcfs_results = analyze_execution_log("execution_FCFS_input_data_1.txt")
-    ep_results = analyze_execution_log("execution_EP_input_data_1.txt")
-    rr_results = analyze_execution_log("execution_RR_input_data_1txt")
+    fcfs_results = analyze_execution_log("execution_FCFS_input_data_10.txt")
+    ep_results = analyze_execution_log("execution_EP_input_data_10.txt")
+    rr_results = analyze_execution_log("execution_RR_input_data_10.txt")
 
     print("FCFS Metrics:", fcfs_results)
     print("EP Metrics:", ep_results)
