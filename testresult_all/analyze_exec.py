@@ -20,19 +20,16 @@ def analyze_execution_log(filename):
             lines = file.readlines()
 
             for line in lines:
-                # Skip invalid or empty lines
                 if not line.strip() or "Time of Transition" in line:
                     continue
 
-                # Split and clean line parts
                 parts = [p.strip() for p in line.split("|") if p.strip()]
 
-                # Ensure the line has the expected format
                 if len(parts) == 4 and parts[0].isdigit():
                     try:
-                        time = int(parts[0])  # Time of Transition
-                        pid = int(parts[1])  # Process ID
-                        state = parts[3]  # New State
+                        time = int(parts[0])  # time of transition
+                        pid = int(parts[1])  # process ID
+                        state = parts[3]  # new State
 
                         # Initialize process information
                         if pid not in process_info:
@@ -45,26 +42,21 @@ def analyze_execution_log(filename):
                                 "last_run_time": 0
                             }
 
-                        # Record arrival time
                         if state == "READY" and process_info[pid]["arrival"] is None:
                             process_info[pid]["arrival"] = time
 
-                        # Record first run time
                         if state == "RUNNING" and process_info[pid]["first_run"] is None:
                             process_info[pid]["first_run"] = time
 
-                        # Accumulate CPU time
                         if state == "RUNNING":
                             if process_info[pid]["last_run_time"] > 0:
                                 process_info[pid]["total_cpu_time"] += time - process_info[pid]["last_run_time"]
                             total_execution_time += 1
                             process_info[pid]["last_run_time"] = time
 
-                        # Record completion time
                         if state == "TERMINATED":
                             process_info[pid]["completion"] = time
 
-                        # Update total elapsed time
                         total_time = max(total_time, time)
 
                     except ValueError:
@@ -72,7 +64,7 @@ def analyze_execution_log(filename):
                 else:
                     continue
 
-        # Compute metrics
+        # loop to calculate the metrics 
         for pid, info in process_info.items():
             if info["arrival"] is not None and info["completion"] is not None:
                 turnaround_time = info["completion"] - info["arrival"]
@@ -81,18 +73,18 @@ def analyze_execution_log(filename):
 
                 if info["first_run"] is not None:
                     response_time = info["first_run"] - info["arrival"]
-                    response_times.append(max(response_time, 0))  # Ensure non-negative response time
+                    response_times.append(max(response_time, 0)) 
 
                 if info["total_cpu_time"] is not None:
                     wait_time = turnaround_time - info["total_cpu_time"]
-                    wait_times.append(max(wait_time, 0))  # Ensure non-negative waiting time
+                    wait_times.append(max(wait_time, 0))
 
-        # Calculate averages
+        # calculate the averages
         metrics["average_turnaround_time"] = round(float(np.mean(turnaround_times)), 2) if turnaround_times else 0
         metrics["average_wait_time"] = round(float(np.mean(wait_times)), 2) if wait_times else 0
         metrics["average_response_time"] = round(float(np.mean(response_times)), 2) if response_times else 0
 
-        # Calculate CPU utilization
+        # calculate the CPU utilization
         if total_time > 0:
             metrics["cpu_utilization"] = round((total_execution_time / total_time) * 100, 2)
 
