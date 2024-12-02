@@ -399,8 +399,8 @@ int main(int argc, char *argv[]) {
     std::string scheduler = argv[2];  //argukment to take the scheduler type
 
     // Hardcoded output filenames
-    const std::string executionFile = "execution.txt";
-    const std::string memoryFile = "memory.txt";
+    const std::string executionFile = "execution_101259149_101260364.txt";
+    const std::string memoryFile = "memory_status_101259149_101260364.txt";
 
     // Open output files
     std::ofstream executionLog(executionFile);
