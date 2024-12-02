@@ -62,7 +62,7 @@ void logExecutionStatus(std::ofstream &executionLog, int pid, const std::string 
 
 int allocateMemory(Process &process) {
     int bestFitIndex = -1;
-    unsigned int smallestSize = UINT_MAX;
+    unsigned int smallestSize = 1000000;
 
     for (int i = 0; i < memoryPartitions.size(); i++) {
         if (memoryPartitions[i].occupiedBy == -1 && memoryPartitions[i].size >= process.memorySize) {
@@ -390,17 +390,19 @@ std::queue<Process> readInputData(const std::string &filename) {
 }
 
 int main(int argc, char *argv[]) {
-    if (argc < 4) {  // Updated to require 4 arguments
-        std::cerr << "Usage: " << argv[0] << " <input_file> <scheduler> <execution_log> <memory_log>\n";
+    if (argc < 3) { 
+        std::cerr << "Usage: " << argv[0] << " <input_file> <scheduler>\n";
         return 1;
     }
 
-    std::string inputFile = argv[1];      // first argument: input file
-    std::string scheduler = argv[2];     // second argument: scheduler type
-    std::string executionFile = argv[3]; // third argument: execution log
-    std::string memoryFile = argv[4];    // fourth argument: memory log
+    std::string inputFile = argv[1]; // argument to take the input type
+    std::string scheduler = argv[2];  //argukment to take the scheduler type
 
-    // open output files
+    // Hardcoded output filenames
+    const std::string executionFile = "execution.txt";
+    const std::string memoryFile = "memory.txt";
+
+    // Open output files
     std::ofstream executionLog(executionFile);
     std::ofstream memoryLog(memoryFile);
 
@@ -409,13 +411,13 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // read the input trace
+    // Read the input trace
     std::queue<Process> processes = readInputData(inputFile);
 
-    // log the initial state of the memory (first line of mem status)
+    // Log the initial state of the memory (first line of mem status)
     logMemoryStatus(memoryLog, memoryPartitions);
 
-    // logic for running a specific scheduler
+    // Logic for running a specific scheduler
     if (scheduler == "FCFS") {
         runScheduler(processes, executionLog, memoryLog);
     } else if (scheduler == "EP") {
@@ -427,7 +429,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // close files used for logging
+    // Close files used for logging
     executionLog.close();
     memoryLog.close();
 
