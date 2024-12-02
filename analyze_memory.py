@@ -46,7 +46,7 @@ def analyze_all_memory_logs(schedulers, traces):
     results = {trace: [] for trace in traces}
     for trace in traces:
         for scheduler in schedulers:
-            filename = f"memory_status_{scheduler}_{trace}.txt"
+            filename = "memory_status_101259149_101260364.txt"
             metrics = analyze_memory_log(filename)
             metrics["scheduler"] = scheduler
             results[trace].append(metrics)

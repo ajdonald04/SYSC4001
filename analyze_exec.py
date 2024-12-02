@@ -97,6 +97,7 @@ def analyze_execution_log(filename):
 
 
 if __name__ == "__main__":
+    # swap these to the file names as needed 
     fcfs_results = analyze_execution_log("execution_FCFS_input_data_8.txt")
     ep_results = analyze_execution_log("execution_EP_input_data_8.txt")
     rr_results = analyze_execution_log("execution_RR_input_data_8.txt")
