@@ -97,9 +97,9 @@ def analyze_execution_log(filename):
 
 
 if __name__ == "__main__":
-    fcfs_results = analyze_execution_log("execution_FCFS_input_data_10.txt")
-    ep_results = analyze_execution_log("execution_EP_input_data_10.txt")
-    rr_results = analyze_execution_log("execution_RR_input_data_10.txt")
+    fcfs_results = analyze_execution_log("execution_FCFS_input_data_8.txt")
+    ep_results = analyze_execution_log("execution_EP_input_data_8.txt")
+    rr_results = analyze_execution_log("execution_RR_input_data_8.txt")
 
     print("FCFS Metrics:", fcfs_results)
     print("EP Metrics:", ep_results)
